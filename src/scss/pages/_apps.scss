@@ -1,0 +1,190 @@
+@layer app-overrides {
+// 
+// common
+// 
+
+.inside-left-sidebar {
+	.left-part {
+		width: 240px;
+	}
+}
+
+.chatlist {
+	.v-list-item__prepend>.v-avatar~.v-list-item__spacer {
+		width: 0;
+	}
+}
+
+
+//
+//Full Calendar
+.fc {
+	.fc-button-group {
+		>.fc-button {
+			display: flex !important;
+			align-items: center !important;
+			padding: 6px 22px !important;
+
+		}
+	}
+    .fc-event-title{
+		font-size: 14px !important;
+		padding: 3px 6px !important;
+	}
+	.fc-button {
+		font-size: 1rem !important;
+		font-weight: 500 !important;
+		text-transform: capitalize !important;
+
+		.fc-icon {
+			font-size: 1.5em !important;
+			vertical-align: unset !important;
+		}
+	}
+
+	.fc-button-primary {
+		background: transparent !important;
+		border-color: rgb(var(--v-theme-primary)) !important;
+		color: rgb(var(--v-theme-primary)) !important;
+
+		&:hover {
+			background-color: rgb(var(--v-theme-primary)) !important;
+			border-color: rgb(var(--v-theme-primary)) !important;
+			color: #fff !important;
+		}
+
+		&:not(:disabled).fc-button-active {
+			background-color: rgb(var(--v-theme-primary)) !important;
+			border-color: rgb(var(--v-theme-primary)) !important;
+			color: #fff !important;
+
+			&:focus {
+				box-shadow: none !important;
+			}
+		}
+
+		&:not(:disabled) {
+			&:active {
+				background-color: rgb(var(--v-theme-primary)) !important;
+				border-color: rgb(var(--v-theme-primary)) !important;
+
+				&:focus {
+					box-shadow: none !important;
+				}
+			}
+		}
+
+		&:disabled {
+			background-color: rgb(var(--v-theme-primary)) !important;
+			border-color: rgb(var(--v-theme-primary)) !important;
+			color: #fff !important;
+			opacity: 1 !important;
+		}
+	}
+
+	.fc-col-header-cell-cushion {
+		display: inline-block !important;
+		padding: 10px 5px !important;
+		font-size: 14px !important;
+	}
+}
+
+.fc-theme-standard {
+	td {
+		border: 1px solid rgba(var(--v-border-color), 1) !important;
+	}
+
+	th {
+		border: 1px solid rgba(var(--v-border-color), 1) !important;
+		border-bottom: 0 !important;
+	}
+
+	.fc-scrollgrid {
+		border: 0 !important;
+	}
+}
+
+.fc-h-event {
+	background-color: rgb(var(--v-theme-primary));
+	border:0px solid rgb(var(--v-theme-primary));
+	display: block;
+}
+
+.fc-direction-ltr {
+	.fc-button-group {
+		>.fc-button {
+			border-radius: 0 !important;
+			margin-left: -1px !important;
+
+			&:first-child {
+				border-bottom-left-radius: $border-radius-root !important;
+				border-top-left-radius: $border-radius-root !important;
+				margin-left: 0 !important;
+			}
+
+			&:last-child {
+				border-bottom-right-radius: $border-radius-root !important;
+				border-top-right-radius: $border-radius-root !important;
+			}
+		}
+	}
+}
+
+.fc-today-button {
+	border-radius: $border-radius-root !important;
+}
+
+@media screen and (max-width:600px) {
+	.fc {
+		.fc-toolbar {
+			display: block;
+			text-align: center;
+		}
+	}
+
+	.fc-toolbar-chunk {
+		.fc-toolbar-title {
+			margin: 15px 0;
+		}
+	}
+}
+
+
+.customTab {
+	.v-btn {
+		&.v-tab-item--selected {
+			background-color: rgb(var(--v-theme-lightprimary)) !important;
+
+			.icon {
+				background-color: rgb(var(--v-theme-primary)) !important;
+				color: #fff !important;
+			}
+		}
+	}
+}
+
+.email-items {
+	padding: 0px 24px 12px;
+
+	&.selected-email {
+		.email-title {
+			color: rgb(var(--v-theme-primary)) !important;
+		}
+	}
+
+	&:hover {
+		background-color: rgb(var(--v-theme-hoverColor));
+
+		.email-title {
+			color: rgb(var(--v-theme-primary)) !important;
+		}
+
+	}
+}
+
+.email-content {
+	p {
+		margin: 10px 0;
+	}
+}
+}

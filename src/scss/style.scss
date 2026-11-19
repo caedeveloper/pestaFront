@@ -1,0 +1,52 @@
+@import './layer-order';
+@import './variables';
+@import 'vuetify/styles';
+@import './override';
+@import './layout/text';
+@import './layout/reboot';
+@import './layout/container';
+@import './layout/sidebar';
+// @import './layout/rtl'; // Demostración desactivada.
+@import './layout/topbar';
+// @import './layout/horizontal'; // Demostración desactivada.
+// @import './layout/dark'; // Demostración desactivada.
+// @import './layout/customizer'; // Demostración desactivada.
+
+// @import './theme/themeColors'; // Demostración desactivada.
+
+@import './components/VBreadcrumb';
+@import './components/VAlert';
+@import './components/VButtons';
+@import './components/VCard';
+@import './components/VCarousel';
+@import './components/VField';
+@import './components/VList';
+@import './components/VInput';
+@import './components/VNavigationDrawer';
+@import './components/VShadow';
+@import './components/VSwitch';
+@import './components/VSelectionControl';
+@import './components/VTextField';
+@import './components/VTextarea';
+@import './components/VTabs';
+@import './components/VTable';
+@import './components/VExpansionpanel';
+@import './components/VDatatables';
+@import './components/VStepper';
+@import './components/VLabs';
+
+/*Landing page css*/
+// @import 'landingpage/header'; // Demostración desactivada.
+// @import 'landingpage/general'; // Demostración desactivada.
+
+/*Front page css*/
+// @import 'front/header'; // Demostración desactivada.
+// @import 'front/general'; // Demostración desactivada.
+
+@import './pages/datatable';
+// @import './pages/dashboards'; // Demostración desactivada.
+// @import './pages/editor'; // Demostración desactivada.
+@import './pages/authentication';
+// @import './pages/apps'; // Demostración desactivada.
+
+@import 'vue3-perfect-scrollbar/style.css';
