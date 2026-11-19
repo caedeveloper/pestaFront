@@ -7,7 +7,7 @@ const read = (): Convocatoria[] => {
     if (typeof window === 'undefined') return clone(convocatoriasMock);
     try {
         const saved = window.localStorage.getItem(storageKey);
-        return saved ? JSON.parse(saved) as Convocatoria[] : clone(convocatoriasMock);
+        return saved ? (JSON.parse(saved) as Convocatoria[]).map((item) => ({ ...item, etapas: item.etapas || [] })) : clone(convocatoriasMock);
     } catch { return clone(convocatoriasMock); }
 };
 

@@ -5,14 +5,15 @@ import UiParentCard from '@/components/shared/UiParentCard.vue';
 import UiModal from '@/components/shared/UiModal.vue';
 import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import HeinrichStatusChip from '@/components/heinrich/HeinrichStatusChip.vue';
-import { type Convocatoria, type TipoAlcance } from '../convocatorias.mock';
+import { type AdmissionStage, type Convocatoria, type TipoAlcance } from '../convocatorias.mock';
 import { getConvocatoria, nextConvocatoriaId, resolveEstado, saveConvocatoria } from '../convocatorias.store';
+import EtapasSection from '../components/EtapasSection.vue';
 
 type Tab = 'configuration' | 'stages';
 const route = useRoute();
 const router = useRouter();
 const existing = computed(() => typeof route.params.id === 'string' ? getConvocatoria(route.params.id) : undefined);
-const blank = (): Convocatoria => ({ id: nextConvocatoriaId(), nombre: '', descripcion: '', anio: '', nivel: '', grado: '', tipoAlcance: 'nivel', apertura: '', cierre: '', registros: 0, cupos: 0, postulantes: 0, duracionReservaMinutos: 30, publicada: false, finalizada: false, estado: 'Borrador' });
+const blank = (): Convocatoria => ({ id: nextConvocatoriaId(), nombre: '', descripcion: '', anio: '', nivel: '', grado: '', tipoAlcance: 'nivel', apertura: '', cierre: '', registros: 0, cupos: 0, postulantes: 0, duracionReservaMinutos: 30, publicada: false, finalizada: false, estado: 'Borrador', etapas: [] });
 const form = ref<Convocatoria>(existing.value ? JSON.parse(JSON.stringify(existing.value)) : blank());
 const savedSnapshot = ref(JSON.stringify(form.value));
 const active = ref<Tab>('configuration');
@@ -43,6 +44,7 @@ function publish() { if (validate()) confirmPublish.value = true; }
 function confirmPublication() { confirmPublish.value = false; if (persist(true)) router.push({ name: 'admision-convocatorias' }); }
 function requestBack() { if (isDirty.value) confirmLeave.value = true; else router.push({ name: 'admision-convocatorias' }); }
 function discard() { confirmLeave.value = false; allowLeave.value = true; router.push({ name: 'admision-convocatorias' }); }
+function updateStages(stages: AdmissionStage[]) { form.value.etapas = stages; if (existing.value) { saveConvocatoria(form.value); savedSnapshot.value = JSON.stringify(form.value); } }
 onBeforeRouteLeave(() => { if (isDirty.value && !allowLeave.value) return window.confirm('Hay cambios sin guardar. ¿Desea descartarlos?'); });
 </script>
 
@@ -50,7 +52,7 @@ onBeforeRouteLeave(() => { if (isDirty.value && !allowLeave.value) return window
   <HeinrichHeroBanner title="Admisión" subtitle="Administración del proceso de admisión" />
   <v-alert v-if="message" type="success" variant="tonal" closable class="mb-6" @click:close="message = ''">{{ message }}</v-alert>
   <UiParentCard title="Configuración de convocatoria" icon="mdi-cog-outline">
-    <template #action><HeinrichStatusChip :status="status" size="small" /></template>
+    <template #action><span class="text-body-2 me-2">Convocatoria:</span><HeinrichStatusChip :status="status" size="small" /></template>
     <v-tabs v-model="active" class="editor-tabs" show-arrows><v-tab value="configuration" prepend-icon="mdi-cog-outline">Configuración <v-icon v-if="invalid" color="error" size="16" class="ms-1">mdi-alert-circle</v-icon></v-tab><v-tab value="stages" prepend-icon="mdi-format-list-numbered">Etapas</v-tab></v-tabs>
     <v-divider class="mb-6" />
     <div v-if="active === 'configuration'">
@@ -58,7 +60,7 @@ onBeforeRouteLeave(() => { if (isDirty.value && !allowLeave.value) return window
       <UiParentCard title="Control de acceso" icon="mdi-calendar-clock-outline" class="mb-6"><div class="text-subtitle-2 mb-4">Calendario de registro</div><v-row><v-col cols="12" md="6"><v-text-field v-model="form.apertura" type="datetime-local" label="Fecha y hora de apertura" :error-messages="submitted ? errors.apertura : ''" /></v-col><v-col cols="12" md="6"><v-text-field v-model="form.cierre" type="datetime-local" label="Fecha y hora de cierre" :error-messages="submitted ? errors.cierre : ''" /></v-col></v-row><v-divider class="my-2" /><div class="text-subtitle-2 my-4">Capacidad de registro</div><v-row><v-col cols="12" md="6"><v-text-field v-model.number="form.cupos" type="number" min="1" label="Cupos de registro" :error-messages="submitted ? errors.cupos : ''" /></v-col><v-col cols="12" md="6"><v-text-field v-model.number="form.duracionReservaMinutos" type="number" min="1" suffix="minutos" label="Duración de reserva temporal" :error-messages="submitted ? errors.reserva : ''" /></v-col></v-row><v-alert type="info" variant="tonal" density="comfortable">Cada cupo permite a un tutor responsable registrar uno o varios postulantes durante el tiempo de reserva configurado.</v-alert></UiParentCard>
       <UiParentCard title="Revisión y publicación" icon="mdi-clipboard-check-outline"><v-row><v-col cols="12" md="6"><div class="review-block"><div class="text-subtitle-2 mb-3">Datos generales</div><p><b>Nombre:</b> {{ form.nombre || 'Sin definir' }}</p><p><b>Año:</b> {{ form.anio || 'Sin definir' }}</p><p><b>Alcance:</b> {{ form.grado || form.nivel || 'Sin definir' }}</p></div></v-col><v-col cols="12" md="6"><div class="review-block"><div class="text-subtitle-2 mb-3">Control de acceso</div><p><b>Inicio:</b> {{ form.apertura || 'Sin definir' }}</p><p><b>Cierre:</b> {{ form.cierre || 'Sin definir' }}</p><p><b>Cupos:</b> {{ form.cupos || 'Sin definir' }}</p><p><b>Reserva:</b> {{ form.duracionReservaMinutos }} minutos</p></div></v-col></v-row><v-divider class="my-4" /><div class="d-flex align-center justify-space-between"><div><div class="text-subtitle-1 font-weight-medium">Estado</div><HeinrichStatusChip :status="status" class="mt-2" /></div><v-btn color="primary" @click="publish">Publicar convocatoria</v-btn></div></UiParentCard>
     </div>
-    <UiParentCard v-else title="Etapas del proceso de admisión" icon="mdi-format-list-numbered"><v-empty-state icon="mdi-calendar-outline" title="Etapas disponibles próximamente" text="Las etapas permiten organizar el proceso de admisión en periodos configurables, cada uno con sus propios workflows y actividades." /></UiParentCard>
+    <EtapasSection v-else :convocatoria-id="form.id" :stages="form.etapas" @update:stages="updateStages" />
     <template #footer-actions><div class="d-flex flex-wrap justify-end ga-3 w-100"><v-btn variant="outlined" @click="requestBack">Cancelar</v-btn><v-btn variant="outlined" color="primary" @click="saveAndBack">Guardar borrador</v-btn><v-btn color="primary" @click="saveAndContinue">Guardar y continuar</v-btn></div></template>
   </UiParentCard>
   <UiModal v-model:show="confirmLeave" title="Descartar cambios"><p>Hay modificaciones sin guardar. ¿Desea descartarlas y volver al listado?</p><template #footer-actions><v-btn variant="text" @click="confirmLeave = false">Continuar editando</v-btn><v-btn color="primary" @click="discard">Descartar cambios</v-btn></template></UiModal>
