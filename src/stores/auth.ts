@@ -3,6 +3,7 @@ import { router } from '@/router';
 import usePostulantesService from '@/features/postulantes/postulantes.services';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import type { TutorRegistro } from '@/features/postulantes/postulantes.types';
+import { ROL_PERSONAL, ROL_TUTOR, type AdmissionRole } from '@/constants/roles';
 
 type SessionUser = {
     id: number;
@@ -12,6 +13,7 @@ type SessionUser = {
     lastName: string;
     token: string;
     mode: 'demo' | 'api';
+    roles?: AdmissionRole[];
 };
 
 const sessionKey = 'heinrich-admision-demo-user';
@@ -33,21 +35,41 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({ user: readSession(), returnUrl: null as string | null }),
     getters: {
         accessToken: (state) => state.user?.token || null,
-        hasRealSession: (state) => state.user?.mode === 'api'
+        hasRealSession: (state) => state.user?.mode === 'api',
+        roles: (state): AdmissionRole[] => state.user?.roles?.length ? state.user.roles : state.user ? [ROL_TUTOR] : []
     },
     actions: {
         guardarSesion(user: SessionUser) {
             this.user = user;
             sessionStorage.setItem(sessionKey, JSON.stringify(user));
         },
-        async loginExistente(correo: string, password: string) {
+        async loginExistente(correo: string, password: string, rol: AdmissionRole = ROL_TUTOR, documento?: string) {
+            const identificador = correo.trim();
+            if (import.meta.env.DEV && rol === ROL_PERSONAL && identificador.toLocaleLowerCase() === 'admin' && password === 'admin') {
+                this.guardarSesion({ id: -1, tutorId: null, username: identificador, firstName: 'Administrador', lastName: '', token: 'demo-local', mode: 'demo', roles: [ROL_PERSONAL] });
+                const destination = this.returnUrl || '/dashboards/modern';
+                this.returnUrl = null;
+                await router.push(destination);
+                return;
+            }
+            if (rol !== ROL_TUTOR) throw new Error('Credenciales inválidas');
             if (password !== '123456') throw new Error('Contraseña inválida');
             const emailNormalizado = correo.trim().toLocaleLowerCase();
+            if (import.meta.env.DEV && emailNormalizado === 'personal@heinrich.local') {
+                this.guardarSesion({ id: -1, tutorId: null, username: correo.trim(), firstName: 'Personal de admisión', lastName: '', token: 'demo-local', mode: 'demo', roles: [ROL_PERSONAL] });
+                const destination = this.returnUrl || '/admision/convocatorias';
+                this.returnUrl = null;
+                await router.push(destination);
+                return;
+            }
             const registro = await usePostulantesService().fetchRegistro();
             const coincidencia = registro.registros.flatMap((postulante) => [
                 { id: postulante.tutorPrincipalId, tutor: postulante.tutorPrincipal },
                 { id: postulante.tutorSegundoId, tutor: postulante.tutorSegundo }
-            ]).find(({ tutor }) => tutor.correoElectronico.trim().toLocaleLowerCase() === emailNormalizado);
+            ]).find(({ tutor }) =>
+                tutor.correoElectronico.trim().toLocaleLowerCase() === emailNormalizado &&
+                tutor.documentoIdentidad.trim() === (documento || '').trim()
+            );
             if (!coincidencia) throw new Error('Tutor no encontrado');
 
             this.guardarSesion({
@@ -57,9 +79,10 @@ export const useAuthStore = defineStore('auth', {
                 firstName: nombreTutor(coincidencia.tutor),
                 lastName: '',
                 token: 'demo-local',
-                mode: 'demo'
+                mode: 'demo',
+                roles: [ROL_TUTOR]
             });
-            const destination = this.returnUrl || '/postulantes';
+            const destination = this.returnUrl || '/dashboards/modern';
             this.returnUrl = null;
             await router.push(destination);
         },
@@ -71,7 +94,8 @@ export const useAuthStore = defineStore('auth', {
                 firstName: 'Nuevo tutor',
                 lastName: '',
                 token: 'demo-local',
-                mode: 'demo'
+                mode: 'demo',
+                roles: [ROL_TUTOR]
             });
             this.returnUrl = null;
             const tutorId = await useRegistroPostulanteStore().iniciarPostulanteConTutorNuevo();

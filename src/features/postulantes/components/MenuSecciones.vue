@@ -96,11 +96,6 @@ onBeforeUnmount(() => window.removeEventListener('scroll', actualizarSeccionActi
     stroke-linecap: round;
 }
 
-.admission-section-ring .is-pending {
-    stroke: #c8e6c9;
-}
-
-.admission-section-ring .is-complete {
-    stroke: #2e7d32;
-}
+.admission-section-ring .is-pending { stroke: rgba(var(--v-theme-success), .28); }
+.admission-section-ring .is-complete { stroke: rgb(var(--v-theme-success)); }
 </style>

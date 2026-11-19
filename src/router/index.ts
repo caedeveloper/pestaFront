@@ -22,5 +22,7 @@ router.beforeEach((to) => {
         auth.returnUrl = to.fullPath;
         return '/auth/login';
     }
+    const allowedRoles = to.matched.flatMap((record) => (record.meta.restrictToRoles as string[] | undefined) || []);
+    if (allowedRoles.length && !allowedRoles.some((role) => auth.roles.some((currentRole) => currentRole === role))) return '/dashboards/modern';
     if (to.path === '/auth/login' && auth.user) return auth.returnUrl || '/dashboards/modern';
 });

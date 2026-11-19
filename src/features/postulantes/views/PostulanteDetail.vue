@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import AdmissionHeroBanner from '@/components/shared/AdmissionHeroBanner.vue';
+import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiAddCard from '@/components/shared/UiAddCard.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { etiqueta, iniciales, nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
@@ -48,7 +48,7 @@ function editarPostulante() {
             Mis postulantes
         </v-btn>
 
-        <AdmissionHeroBanner id="detalle-postulante" :title="nombre" subtitle="Registro de postulante · Convocatoria 2027" />
+        <HeinrichHeroBanner id="detalle-postulante" :title="nombre" subtitle="Registro de postulante · Convocatoria 2027" />
 
         <UiParentCard title="Datos del postulante" icon="mdi-account-outline" class="mb-6">
             <v-card variant="outlined">

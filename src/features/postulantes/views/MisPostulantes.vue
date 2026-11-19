@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import AdmissionHeroBanner from '@/components/shared/AdmissionHeroBanner.vue';
+import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import UiAddCard from '@/components/shared/UiAddCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
@@ -46,7 +46,7 @@ async function agregarPostulante() {
 
 <template>
     <section aria-labelledby="mis-postulantes">
-        <AdmissionHeroBanner id="mis-postulantes" title="Mis postulantes" subtitle="Gestiona las solicitudes de admisión de tus hijos." />
+        <HeinrichHeroBanner id="mis-postulantes" title="Mis postulantes" subtitle="Gestiona las solicitudes de admisión de tus hijos." />
 
         <UiParentCard title="Postulantes registrados" icon="mdi-account-school-outline">
             <v-card v-for="postulante in postulantes" :key="postulante.id" variant="outlined" class="applicant-card position-relative mb-4">

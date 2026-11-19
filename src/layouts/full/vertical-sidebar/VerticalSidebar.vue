@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { computed } from 'vue';
 import { useCustomizerStore } from '@/stores/customizer';
 import { useDisplay } from 'vuetify';
-import sidebarItems from './sidebarItem';
+import { getAdmissionMenu } from './admissionMenu';
+import { useAuthStore } from '@/stores/auth';
 
 import NavGroup from './NavGroup/index.vue';
 import NavItem from './NavItem/index.vue';
@@ -13,7 +14,8 @@ import RtlLogo from '../logo/RtlLogo.vue';
 
 const { mdAndUp } = useDisplay();
 const customizer = useCustomizerStore();
-const sidebarMenu = shallowRef(sidebarItems);
+const auth = useAuthStore();
+const sidebarMenu = computed(() => getAdmissionMenu(auth.roles));
 </script>
 
 <template>

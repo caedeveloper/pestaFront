@@ -1,8 +1,5 @@
 <script setup lang="ts">
-defineProps<{
-    title: string;
-    subtitle?: string;
-}>();
+defineProps<{ title: string; subtitle?: string }>();
 </script>
 
 <template>
@@ -16,7 +13,9 @@ defineProps<{
                     </div>
                 </div>
                 <div class="d-none py-0 d-lg-block overflow-hidden" aria-hidden="true">
-                    <div class="mb-n16 mt-3"><img src="@/assets/images/breadcrumb/logo-heinrich.svg" alt="" height="170" /></div>
+                    <div class="mb-n16 mt-3">
+                        <img src="@/assets/images/breadcrumb/logo-heinrich.svg" alt="" height="170" />
+                    </div>
                 </div>
             </div>
         </div>

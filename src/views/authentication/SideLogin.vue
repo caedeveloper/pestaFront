@@ -1,57 +1,43 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import { UserPlusIcon } from 'vue-tabler-icons';
 import Logo from '@/layouts/full/logo/Logo.vue';
 import LoginForm from '@/components/auth/LoginForm.vue';
+import { useAuthStore } from '@/stores/auth';
 
-// Ejemplo original desactivado; se conserva para reutilización.
-//
-// import Logo from '@/layouts/full/logo/Logo.vue';
-// /* Login form */
-// import LoginForm from '@/components/auth/LoginForm.vue';
+const auth = useAuthStore();
+const creatingTutor = ref(false);
+async function registrarTutorNuevo() {
+    creatingTutor.value = true;
+    try { await auth.iniciarTutorNuevo(); } finally { creatingTutor.value = false; }
+}
 </script>
 
 <template>
     <v-container fluid class="pa-3">
         <v-row class="heinrich-login d-flex justify-center align-center">
             <v-col cols="12" class="d-flex align-center">
-                <v-card rounded="md" elevation="10" class="px-sm-1 px-0 mx-auto" max-width="760">
+                <v-card rounded="md" elevation="10" class="px-sm-1 px-0 mx-auto" max-width="780">
                     <v-card-item class="pa-6 pa-sm-8">
                         <div class="d-flex justify-center py-4"><Logo /></div>
                         <h1 class="text-display-small font-weight-bold mb-2 text-center">Bienvenido a Heinrich</h1>
-                        <p class="text-title-large mb-6 text-center">Admisión del Colegio Pestalozzi</p>
-                        <LoginForm />
+                        <p class="text-title-large mb-6 text-center">Intranet del Colegio Pestalozzi</p>
+                        <v-row dense>
+                            <v-col cols="12" md="6" class="pe-md-6 tutor-new d-flex flex-column align-center text-center justify-center">
+                                <div class="d-flex align-center ga-2 mb-4"><v-avatar color="lightprimary" size="38"><UserPlusIcon size="20" /></v-avatar><span class="font-weight-semibold">Tutor nuevo</span></div>
+                                <p class="text-body-1 text-medium-emphasis mb-6">Registra tus datos como tutor responsable antes de crear la solicitud de tu hijo.</p>
+                                <v-btn size="large" :loading="creatingTutor" color="primary" class="tutor-new-button" @click="registrarTutorNuevo">Registrar un postulante</v-btn>
+                            </v-col>
+                            <v-col cols="12" md="6" class="ps-md-6 existing-login"><LoginForm /></v-col>
+                        </v-row>
                     </v-card-item>
                 </v-card>
             </v-col>
         </v-row>
     </v-container>
-    <!-- Demostración original desactivada.
-<div class="pa-3">
-        <v-row class="h-100vh mh-100 auth">
-            <v-col cols="12" lg="7" xl="8"
-                class="d-lg-flex align-center justify-center authentication position-relative">
-                <div class="auth-header pt-lg-6 pt-2 px-sm-6 px-3 pb-lg-6 pb-0">
-                    <div class="position-relative">
-                        <Logo />
-                    </div>
-                </div>
-                <div class="">
-                    <img src="@/assets/images/backgrounds/login-bg.svg" class="position-relative d-none d-lg-flex"
-                        alt="login-background" />
-                </div>
-            </v-col>
-            <v-col cols="12" lg="5" xl="4" class="d-flex align-center justify-center">
-                <div class="mt-xl-0 mt-5 mw-100">
-                    <h2 class="text-display-small font-weight-bold mb-2">Welcome to Modernize</h2>
-                    <div class="text-title-large mb-6">Your Admin Dashboard</div>
-                    <LoginForm />
-                    <h6 class="text-headline-small  d-flex align-center mt-6 font-weight-medium">
-                        New to Modernize?
-                        <v-btn class="pl-0 text-primary text-body-large opacity-1 pl-2 font-weight-medium" height="auto"
-                            to="/auth/register" variant="plain">Create an account</v-btn>
-                    </h6>
-                </div>
-            </v-col>
-        </v-row>
-    </div>
-    -->
 </template>
+
+<style scoped>
+@media (min-width: 960px) { .existing-login { border-left: 1px solid rgb(var(--v-theme-borderColor)); } }
+.tutor-new-button { width: 100%; }
+</style>

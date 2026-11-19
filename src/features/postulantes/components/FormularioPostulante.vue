@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import MenuSecciones from './MenuSecciones.vue';
-import AdmissionHeroBanner from '@/components/shared/AdmissionHeroBanner.vue';
+import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { 
@@ -44,7 +44,7 @@ async function guardar() {
 </script>
 
 <template>
-    <AdmissionHeroBanner title="Actualización de datos" :subtitle="nombre" />
+    <HeinrichHeroBanner title="Actualización de datos" :subtitle="nombre" />
     <MenuSecciones :secciones="secciones" />
     <v-form @submit.prevent="guardar">
         <v-row>

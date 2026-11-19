@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import MenuSecciones from './MenuSecciones.vue';
-import AdmissionHeroBanner from '@/components/shared/AdmissionHeroBanner.vue';
+import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
@@ -82,7 +82,7 @@ function quitarHijo(id: number) {
 </script>
 
 <template>
-    <AdmissionHeroBanner title="Actualización de datos" :subtitle="nombre" />
+    <HeinrichHeroBanner title="Actualización de datos" :subtitle="nombre" />
     <MenuSecciones :secciones="secciones" />
     <v-form @submit.prevent="guardar">
         <v-row>

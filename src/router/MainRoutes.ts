@@ -1,4 +1,5 @@
 import PostulantesRoutes from '@/features/postulantes/postulantes.routes';
+import ConvocatoriasRoutes from '@/features/admision/convocatorias.routes';
 
 const MainRoutes = {
     path: '/main',
@@ -14,6 +15,7 @@ const MainRoutes = {
             component: () => import('@/views/dashboard/modern/index.vue')
         },
         ...PostulantesRoutes,
+        ...ConvocatoriasRoutes,
         // Ejemplos desactivados hasta definir los módulos de admisión.
 //         {
 //             name: 'eCommerce',
