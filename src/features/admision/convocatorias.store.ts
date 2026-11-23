@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { convocatoriasMock, type Convocatoria, type ConvocatoriaEstado } from './convocatorias.mock';
+import { legacyStageTutorPermissions } from './stageTutorPermissions';
 
 const storageKey = 'heinrich-admision-convocatorias';
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -7,7 +8,7 @@ const read = (): Convocatoria[] => {
     if (typeof window === 'undefined') return clone(convocatoriasMock);
     try {
         const saved = window.localStorage.getItem(storageKey);
-        return saved ? (JSON.parse(saved) as Convocatoria[]).map((item) => ({ ...item, etapas: (item.etapas || []).map((stage) => ({ ...stage, workflowIds: stage.workflowIds || [], secciones: stage.secciones || [], connectionIds: stage.connectionIds || [] })) })) : clone(convocatoriasMock);
+        return saved ? (JSON.parse(saved) as Convocatoria[]).map((item) => ({ ...item, etapas: (item.etapas || []).map((stage) => ({ ...stage, workflowIds: stage.workflowIds || [], secciones: stage.secciones || [], connectionIds: stage.connectionIds || [], tutorPermissions: { ...legacyStageTutorPermissions, ...(stage.tutorPermissions || {}) } })) })) : clone(convocatoriasMock);
     } catch { return clone(convocatoriasMock); }
 };
 

@@ -19,8 +19,15 @@ export type AdmissionAction = {
 };
 export type AdmissionContentItem = AdmissionAction | AdmissionSection;
 export type AdmissionSection = { id: string; nombre: string; descripcion?: string; orden: number; tipo: 'section'; contenido: AdmissionContentItem[] };
+export interface StageTutorPermissions {
+    canEditApplicant: boolean;
+    canEditOwnData: boolean;
+    canAddTutors: boolean;
+    canManageTutors: boolean;
+    canEditDocuments: boolean;
+}
 /** A destination stage id. Kept as ids so it remains stable when stages are reordered. */
-export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds?: string[]; contenido?: AdmissionContentItem[]; secciones?: AdmissionSection[]; connectionIds?: string[] };
+export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds?: string[]; contenido?: AdmissionContentItem[]; secciones?: AdmissionSection[]; connectionIds?: string[]; tutorPermissions?: StageTutorPermissions };
 
 export type Convocatoria = {
     id: string;
