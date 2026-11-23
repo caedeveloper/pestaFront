@@ -20,6 +20,16 @@ const PostulantesRoutes = [
         component: () => import('./views/RegistroPostulante.vue')
     },
     {
+        name: 'postulante-datos',
+        path: '/postulantes/:postulanteId/datos',
+        component: () => import('./views/PostulanteDatos.vue')
+    },
+    {
+        name: 'postulante-datos-formularios',
+        path: '/postulantes/:postulanteId/datos/formularios',
+        component: () => import('./views/PostulanteDatosFormularios.vue')
+    },
+    {
         name: 'postulante-detalle',
         path: '/postulantes/:postulanteId',
         component: () => import('./views/PostulanteDetail.vue')

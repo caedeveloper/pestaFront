@@ -9,13 +9,14 @@ import { useAuthStore } from '@/stores/auth';
 import { convocatorias } from '@/features/admision/convocatorias.store';
 import { admissionFor, ensureApplicantAdmissions, persistApplicantAdmissions } from '@/features/admision/admissionOperational.store';
 import { nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
+import { effectiveStageTutorPermissions, stageIsAvailable } from '@/features/admision/stageTutorPermissions';
 const router = useRouter(); const route = useRoute(); const store = useRegistroPostulanteStore(); const auth = useAuthStore(); const dirty = ref(false); const saved = ref(false);
 const postulanteId = computed(() => Number(route.params.postulanteId));
 const registro = computed(() => store.registros.find(item => item.postulanteId === postulanteId.value));
 const admission = computed(() => admissionFor(postulanteId.value));
 const convocatoria = computed(() => convocatorias.value.find(item => item.id === admission.value?.convocatoriaId));
 const stage = computed(() => convocatoria.value?.etapas.find(item => item.id === admission.value?.etapaActualId));
-const now = computed(() => new Date()); const editable = computed(() => Boolean(stage.value) && (!stage.value?.fechaInicio || new Date(stage.value.fechaInicio) <= now.value) && (!stage.value?.fechaCierre || new Date(stage.value.fechaCierre) >= now.value));
+const now = computed(() => new Date()); const editable = computed(() => stageIsAvailable(stage.value, now.value) && effectiveStageTutorPermissions(stage.value, now.value).canEditDocuments);
 const nombre = computed(() => registro.value ? nombreCompleto(registro.value.postulante) : 'Postulante');
 onMounted(async () => { await store.cargarRegistro(); const allowed = registro.value && registroAsignadoA(registro.value, auth.user?.tutorId ?? null, auth.user?.username ?? ''); const call = convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0]; if (call) ensureApplicantAdmissions(store.registros, call.id, call.etapas); if (!allowed) router.replace({ name: 'postulantes' }); });
 function save() { if (!admission.value) return; persistApplicantAdmissions(); dirty.value = false; saved.value = true; }

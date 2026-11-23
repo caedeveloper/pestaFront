@@ -23,8 +23,8 @@ import {
 import { nombreCompleto } from '../postulantes.helpers';
 import type { HijoRegistro } from '../postulantes.types';
 
-const props = defineProps<{ entidad: 'tutor-principal' | 'tutor-segundo' }>();
-const emit = defineEmits<{ volver: [] }>();
+const props = withDefaults(defineProps<{ entidad: 'tutor-principal' | 'tutor-segundo'; readonly?: boolean; embedded?: boolean }>(), { readonly: false, embedded: false });
+const emit = defineEmits<{ volver: []; saved: [] }>();
 const route = useRoute();
 const router = useRouter();
 const store = useRegistroPostulanteStore();
@@ -47,6 +47,7 @@ watch(
 );
 
 async function guardar() {
+    if (props.readonly) return;
     const asignarUsuario = !authStore.user?.tutorId;
     const seguirAlPostulante = route.name === 'postulante-tutor-responsable-nuevo';
     await store.guardarRegistro();
@@ -55,7 +56,8 @@ async function guardar() {
         await router.push({ name: 'postulante-registro', params: { postulanteId: store.postulanteId } });
         return;
     }
-    emit('volver');
+    emit('saved');
+    if (!props.embedded) emit('volver');
 }
 
 function buscarTutorPorDocumento() {
@@ -82,9 +84,9 @@ function quitarHijo(id: number) {
 </script>
 
 <template>
-    <HeinrichHeroBanner title="Actualización de datos" :subtitle="nombre" />
-    <MenuSecciones :secciones="secciones" />
-    <v-form @submit.prevent="guardar">
+    <HeinrichHeroBanner v-if="!embedded" title="Actualización de datos" :subtitle="nombre" />
+    <MenuSecciones v-if="!embedded" :secciones="secciones" />
+    <v-form :class="{ 'formulario-solo-lectura': readonly }" @submit.prevent="guardar">
         <v-row>
             <v-col cols="12">
         <v-alert color="info" type="info" title="Guía para actualización de datos">
@@ -347,7 +349,7 @@ function quitarHijo(id: number) {
             />
         </UiParentCard>
 
-        <v-card elevation="10" class="mt-4">
+        <v-card v-if="!embedded && !readonly" elevation="10" class="mt-4">
             <v-card-text>
                 <div class="text-center">
                     <v-btn variant="outlined" color="primary" size="large" class="mt-2 me-2" @click="emit('volver')">Volver al resumen</v-btn>
@@ -359,3 +361,4 @@ function quitarHijo(id: number) {
         </v-row>
     </v-form>
 </template>
+<style scoped>.formulario-solo-lectura { pointer-events: none; opacity: .78; }</style>

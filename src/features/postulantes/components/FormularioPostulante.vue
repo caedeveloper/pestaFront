@@ -21,7 +21,8 @@ import {
 } from '../postulantes.catalogos';
 import { asegurarReferencias, nombreCompleto, referenciaVacia } from '../postulantes.helpers';
 
-const emit = defineEmits<{ volver: [] }>();
+const props = withDefaults(defineProps<{ readonly?: boolean; embedded?: boolean }>(), { readonly: false, embedded: false });
+const emit = defineEmits<{ volver: []; saved: [] }>();
 const store = useRegistroPostulanteStore();
 const postulante = computed(() => store.postulante);
 const nombre = computed(() => nombreCompleto(postulante.value));
@@ -38,15 +39,17 @@ function quitarReferencia(id: number) {
 }
 
 async function guardar() {
+    if (props.readonly) return;
     await store.guardarRegistro();
-    emit('volver');
+    emit('saved');
+    if (!props.embedded) emit('volver');
 }
 </script>
 
 <template>
-    <HeinrichHeroBanner title="Actualización de datos" :subtitle="nombre" />
-    <MenuSecciones :secciones="secciones" />
-    <v-form @submit.prevent="guardar">
+    <HeinrichHeroBanner v-if="!embedded" title="Actualización de datos" :subtitle="nombre" />
+    <MenuSecciones v-if="!embedded" :secciones="secciones" />
+    <v-form :class="{ 'formulario-solo-lectura': readonly }" @submit.prevent="guardar">
         <v-row>
             <v-col cols="12">
         <v-alert color="info" type="info" title="Guía para actualización de datos">
@@ -140,7 +143,7 @@ async function guardar() {
             <div v-for="(referencia, indice) in postulante.referencias" :key="referencia.id" class="mb-4">
                 <div class="d-flex justify-space-between align-center mb-2">
                     <h3 class="text-title-medium">Referencia N° {{ indice + 1 }}</h3>
-                    <v-btn v-if="postulante.referencias.length > 1" icon variant="tonal" color="primary" density="compact" aria-label="Quitar referencia" @click="quitarReferencia(referencia.id)"><v-icon>mdi-trash-can-outline</v-icon></v-btn>
+                    <v-btn v-if="!readonly && postulante.referencias.length > 1" icon variant="tonal" color="primary" density="compact" aria-label="Quitar referencia" @click="quitarReferencia(referencia.id)"><v-icon>mdi-trash-can-outline</v-icon></v-btn>
                 </div>
                 <v-row>
                     <v-col cols="12" lg="4" md="4" sm="6"><v-text-field label="Nombre de referencia" v-model="referencia.nombre" /></v-col>
@@ -148,10 +151,10 @@ async function guardar() {
                     <v-col cols="12" lg="4" md="4" sm="6"><v-text-field label="Teléfono" v-model="referencia.telefono" /></v-col>
                 </v-row>
             </div>
-            <v-btn color="primary" variant="tonal" @click="agregarReferencia"><v-icon start>mdi-plus</v-icon>Agregar</v-btn>
+            <v-btn v-if="!readonly" color="primary" variant="tonal" @click="agregarReferencia"><v-icon start>mdi-plus</v-icon>Agregar</v-btn>
         </UiParentCard>
 
-        <v-card elevation="10" class="mt-4">
+        <v-card v-if="!embedded && !readonly" elevation="10" class="mt-4">
             <v-card-text>
                 <div class="text-center">
                     <v-btn variant="outlined" color="primary" size="large" class="mt-2 me-2" @click="emit('volver')">Volver al resumen</v-btn>
@@ -163,3 +166,4 @@ async function guardar() {
         </v-row>
     </v-form>
 </template>
+<style scoped>.formulario-solo-lectura { pointer-events: none; opacity: .78; }</style>

@@ -6,6 +6,9 @@ import { useAuthStore } from '@/stores/auth';
 import FormularioPostulante from '../components/FormularioPostulante.vue';
 import FormularioTutor from '../components/FormularioTutor.vue';
 import { registroAsignadoA } from '../postulantes.helpers';
+import { convocatorias } from '@/features/admision/convocatorias.store';
+import { admissionFor } from '@/features/admision/admissionOperational.store';
+import { effectiveStageTutorPermissions } from '@/features/admision/stageTutorPermissions';
 
 const route = useRoute();
 const router = useRouter();
@@ -16,6 +19,22 @@ const entidad = computed(() => {
     if (route.name === 'postulante-tutor-responsable-nuevo' || route.name === 'postulante-tutor-registro') return store.entidadDeTutor(Number(route.params.tutorId));
     if (route.name === 'postulante-registro') return 'postulante';
     return null;
+});
+const stage = computed(() => {
+    const admission = admissionFor(Number(route.params.postulanteId));
+    const call = convocatorias.value.find(item => item.id === admission?.convocatoriaId);
+    return call?.etapas.find(item => item.id === admission?.etapaActualId);
+});
+const registroActual = computed(() => store.registros.find(item => item.postulanteId === Number(route.params.postulanteId)));
+const soloLectura = computed(() => {
+    if (!stage.value || route.name === 'postulante-tutor-responsable-nuevo') return false;
+    const permissions = effectiveStageTutorPermissions(stage.value);
+    if (entidad.value === 'postulante') return !permissions.canEditApplicant;
+    const esTutorResponsable = !authStore.user?.tutorId || registroActual.value?.tutorPrincipalId === authStore.user.tutorId;
+    if (route.query.operation === 'add') return !permissions.canAddTutors || !esTutorResponsable;
+    const tutorId = Number(route.params.tutorId);
+    const esElPropioTutor = !authStore.user?.tutorId || authStore.user.tutorId === tutorId;
+    return !permissions.canEditOwnData || (!esTutorResponsable && !esElPropioTutor);
 });
 
 function volver() {
@@ -73,6 +92,6 @@ watch(entidad, () => window.scrollTo({ top: 0 }));
 </script>
 
 <template>
-    <FormularioPostulante v-if="store.registroCargado && entidad === 'postulante'" @volver="volver" />
-    <FormularioTutor v-else-if="store.registroCargado && (entidad === 'tutor-principal' || entidad === 'tutor-segundo')" :entidad="entidad" @volver="volver" />
+    <FormularioPostulante v-if="store.registroCargado && entidad === 'postulante'" :readonly="soloLectura" @volver="volver" />
+    <FormularioTutor v-else-if="store.registroCargado && (entidad === 'tutor-principal' || entidad === 'tutor-segundo')" :entidad="entidad" :readonly="soloLectura" @volver="volver" />
 </template>

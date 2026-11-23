@@ -29,5 +29,11 @@ export function stageIsAvailable(stage?: AdmissionStage, now = new Date()): bool
 export function effectiveStageTutorPermissions(stage?: AdmissionStage, now = new Date()): StageTutorPermissions {
     const permissions = stageTutorPermissions(stage);
     if (stageIsAvailable(stage, now)) return permissions;
-    return Object.fromEntries(Object.keys(permissions).map((key) => [key, false])) as StageTutorPermissions;
+    return {
+        canEditApplicant: false,
+        canEditOwnData: false,
+        canAddTutors: false,
+        canManageTutors: false,
+        canEditDocuments: false
+    };
 }
