@@ -3,116 +3,17 @@ import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
-import UiAddCard from '@/components/shared/UiAddCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
+import { convocatorias } from '@/features/admision/convocatorias.store';
+import { admissionFor, ensureApplicantAdmissions } from '@/features/admision/admissionOperational.store';
 import { iniciales, nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
-
-const router = useRouter();
-const store = useRegistroPostulanteStore();
-const authStore = useAuthStore();
-
-onMounted(() => store.cargarRegistro());
-
-const postulantes = computed(() => store.registros.filter((registro) => registroAsignadoA(registro, authStore.user?.tutorId ?? null, authStore.user?.username ?? '')).map((registro) => ({
-    id: registro.postulanteId,
-    nombre: nombreCompleto(registro.postulante),
-    iniciales: iniciales(registro.postulante),
-    avance: store.avanceDeRegistro(registro, 'postulante'),
-    tutores: [registro.tutorPrincipal, registro.tutorSegundo].filter((tutor) => Boolean(tutor.nombres)).length
-})));
-
-function registrar(postulanteId: number) {
-    router.push({ name: 'postulante-registro', params: { postulanteId } });
-}
-
-function detalle(postulanteId: number) {
-    router.push({ name: 'postulante-detalle', params: { postulanteId } });
-}
-
-async function agregarPostulante() {
-    const tutorId = authStore.user?.tutorId;
-    if (tutorId) {
-        const postulanteId = await store.crearPostulanteParaTutor(tutorId);
-        if (postulanteId) {
-            router.push({ name: 'postulante-tutor-responsable-nuevo', params: { tutorId } });
-            return;
-        }
-    }
-    const nuevoTutorId = await store.iniciarPostulanteConTutorNuevo();
-    router.push({ name: 'postulante-tutor-responsable-nuevo', params: { tutorId: nuevoTutorId } });
-}
+const router = useRouter(); const store = useRegistroPostulanteStore(); const authStore = useAuthStore();
+const convocatoria = computed(() => convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0]);
+onMounted(async () => { await store.cargarRegistro(); if (convocatoria.value) ensureApplicantAdmissions(store.registros, convocatoria.value.id, convocatoria.value.etapas); });
+const postulaciones = computed(() => store.registros.filter(registro => registroAsignadoA(registro, authStore.user?.tutorId ?? null, authStore.user?.username ?? '')).map(registro => {
+  const admission = admissionFor(registro.postulanteId); const call = convocatorias.value.find(item => item.id === admission?.convocatoriaId) || convocatoria.value; const stage = call?.etapas.find(item => item.id === admission?.etapaActualId);
+  return { id: registro.postulanteId, nombre: nombreCompleto(registro.postulante), iniciales: iniciales(registro.postulante), convocatoria: call?.nombre || 'Sin convocatoria', grado: call?.grado || call?.nivel || 'Sin definir', etapa: stage?.nombre || 'Registro inicial' };
+}));
 </script>
-
-<template>
-    <section aria-labelledby="mis-postulantes">
-        <HeinrichHeroBanner id="mis-postulantes" title="Mis postulantes" subtitle="Gestiona las solicitudes de admisión de tus hijos." />
-
-        <UiParentCard title="Postulantes registrados" icon="mdi-account-school-outline">
-            <v-card v-for="postulante in postulantes" :key="postulante.id" variant="outlined" class="applicant-card position-relative mb-4">
-                <div class="applicant-card__header">
-                    <div class="d-flex align-center">
-                        <v-avatar color="lightprimary" size="52" class="me-3 flex-shrink-0">
-                            <span class="text-primary font-weight-bold">{{ postulante.iniciales }}</span>
-                        </v-avatar>
-                        <div>
-                            <div class="applicant-card__name">{{ postulante.nombre }}</div>
-                            <div class="applicant-card__subtitle text-medium-emphasis">Postulante · Admisión 2027</div>
-                        </div>
-                    </div>
-                    <v-chip class="applicant-card__status" size="small" color="warning" variant="tonal">En proceso</v-chip>
-                </div>
-
-                <v-card-text class="applicant-card__body">
-                    <v-row align="center">
-                        <v-col cols="12">
-                            <div class="d-flex justify-space-between align-center mb-2">
-                                <span class="text-body-2">Progreso del registro</span>
-                                <strong class="text-body-2">{{ postulante.avance.porcentaje }}%</strong>
-                            </div>
-                            <v-progress-linear :model-value="postulante.avance.porcentaje" color="primary" height="8" rounded />
-                        </v-col>
-                        <v-col cols="12" class="d-flex justify-end ga-8 text-body-2 text-medium-emphasis">
-                            <span>{{ postulante.avance.completas }} de {{ postulante.avance.total }} secciones completas</span>
-                            <span>{{ postulante.tutores }} tutores</span>
-                        </v-col>
-                    </v-row>
-                </v-card-text>
-
-                <v-divider />
-                <v-card-actions class="pa-4 justify-end">
-                    <v-btn color="primary" variant="tonal" @click="registrar(postulante.id)">Continuar registro</v-btn>
-                    <v-btn variant="text" @click="detalle(postulante.id)">Ver detalle</v-btn>
-                </v-card-actions>
-            </v-card>
-
-            <UiAddCard title="Registrar otro hijo" @click="agregarPostulante" />
-        </UiParentCard>
-    </section>
-</template>
-
-<style scoped>
-.applicant-card__header {
-    min-height: 126px;
-    padding: 16px;
-    position: relative;
-}
-
-.applicant-card__status {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-}
-
-.applicant-card__name {
-    font-size: 1.5rem;
-    font-weight: 400;
-    line-height: 1.75rem;
-}
-
-.applicant-card__subtitle {
-    font-size: 0.6875rem;
-    line-height: 1rem;
-    white-space: nowrap;
-}
-</style>
+<template><section aria-labelledby="mis-postulaciones"><HeinrichHeroBanner id="mis-postulaciones" title="Mis postulaciones" subtitle="Consulta y realiza el seguimiento del proceso de admisión de tus hijos." /><UiParentCard title="Postulaciones registradas" icon="mdi-account-school-outline"><v-empty-state v-if="!postulaciones.length" icon="mdi-account-search-outline" title="No tienes postulaciones registradas." text="Cuando registres a un hijo, su proceso de admisión aparecerá aquí." /><v-row v-else><v-col v-for="postulacion in postulaciones" :key="postulacion.id" cols="12" md="6"><v-card variant="outlined" class="h-100"><v-card-item><template #prepend><v-avatar color="lightprimary" size="48"><span class="text-primary font-weight-bold">{{ postulacion.iniciales }}</span></v-avatar></template><v-card-title>{{ postulacion.nombre }}</v-card-title><v-card-subtitle>{{ postulacion.grado }}</v-card-subtitle></v-card-item><v-card-text><div class="text-body-2 mb-2"><b>Convocatoria:</b> {{ postulacion.convocatoria }}</div><div class="text-body-2"><b>Etapa actual:</b> {{ postulacion.etapa }}</div></v-card-text><v-card-actions class="justify-end px-4 pb-4"><v-btn color="primary" variant="tonal" @click="router.push({ name: 'postulante-detalle', params: { postulanteId: postulacion.id } })">Ver detalle</v-btn></v-card-actions></v-card></v-col></v-row></UiParentCard></section></template>

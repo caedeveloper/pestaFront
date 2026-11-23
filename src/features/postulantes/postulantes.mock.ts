@@ -188,7 +188,11 @@ export function crearRegistroPostulantesMock(): RegistroPostulantesSnapshot {
             postulante: crearPostulante(),
             tutorPrincipal: crearTutorPrincipal(),
             tutorSegundo: crearTutorSegundo()
-        }],
+        }, (() => {
+            const postulante = crearPostulante();
+            postulante.nombres = 'Mateo Alejandro'; postulante.fechaNacimiento = '2020-09-20'; postulante.documentoIdentidad = '78451237';
+            return { postulanteId: 3, tutorPrincipalId: 1, tutorSegundoId: 2, postulante, tutorPrincipal: crearTutorPrincipal(), tutorSegundo: crearTutorSegundo() };
+        })()],
         siguienteId: 100
     };
 }

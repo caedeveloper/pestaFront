@@ -1,81 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
+import HeinrichStageRenderer from '@/components/heinrich/HeinrichStageRenderer.vue';
+import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
-import UiAddCard from '@/components/shared/UiAddCard.vue';
-import UiParentCard from '@/components/shared/UiParentCard.vue';
-import { etiqueta, iniciales, nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
-import { relacionesTutor } from '../postulantes.catalogos';
-import type { TutorEntidadId } from '../postulantes.types';
-
-const router = useRouter();
-const route = useRoute();
-const store = useRegistroPostulanteStore();
-const authStore = useAuthStore();
-
-onMounted(async () => {
-    await store.cargarRegistro();
-    const postulanteId = Number(route.params.postulanteId);
-    const registro = store.registros.find((item) => item.postulanteId === postulanteId);
-    const asignado = registro && registroAsignadoA(registro, authStore.user?.tutorId ?? null, authStore.user?.username ?? '');
-    if (!asignado || !store.seleccionarPostulante(postulanteId)) router.replace({ name: 'postulantes' });
-});
-
-const nombre = computed(() => nombreCompleto(store.postulante));
-const avance = computed(() => store.avanceDe('postulante'));
-const tutores = computed(() => [
-    { entidad: 'tutor-principal' as const, tutor: store.tutorPrincipal },
-    { entidad: 'tutor-segundo' as const, tutor: store.tutorSegundo }
-].filter(({ tutor }) => Boolean(tutor.nombres)));
-
-function editarTutor(entidad: TutorEntidadId) {
-    router.push({
-        name: 'postulante-tutor-registro',
-        params: { postulanteId: store.postulanteId, tutorId: store.tutorIdDe(entidad) }
-    });
-}
-
-function editarPostulante() {
-    router.push({ name: 'postulante-registro', params: { postulanteId: store.postulanteId } });
-}
+import { convocatorias } from '@/features/admision/convocatorias.store';
+import { admissionFor, ensureApplicantAdmissions, persistApplicantAdmissions } from '@/features/admision/admissionOperational.store';
+import { nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
+const router = useRouter(); const route = useRoute(); const store = useRegistroPostulanteStore(); const auth = useAuthStore(); const dirty = ref(false); const saved = ref(false);
+const postulanteId = computed(() => Number(route.params.postulanteId));
+const registro = computed(() => store.registros.find(item => item.postulanteId === postulanteId.value));
+const admission = computed(() => admissionFor(postulanteId.value));
+const convocatoria = computed(() => convocatorias.value.find(item => item.id === admission.value?.convocatoriaId));
+const stage = computed(() => convocatoria.value?.etapas.find(item => item.id === admission.value?.etapaActualId));
+const now = computed(() => new Date()); const editable = computed(() => Boolean(stage.value) && (!stage.value?.fechaInicio || new Date(stage.value.fechaInicio) <= now.value) && (!stage.value?.fechaCierre || new Date(stage.value.fechaCierre) >= now.value));
+const nombre = computed(() => registro.value ? nombreCompleto(registro.value.postulante) : 'Postulante');
+onMounted(async () => { await store.cargarRegistro(); const allowed = registro.value && registroAsignadoA(registro.value, auth.user?.tutorId ?? null, auth.user?.username ?? ''); const call = convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0]; if (call) ensureApplicantAdmissions(store.registros, call.id, call.etapas); if (!allowed) router.replace({ name: 'postulantes' }); });
+function save() { if (!admission.value) return; persistApplicantAdmissions(); dirty.value = false; saved.value = true; }
 </script>
-
-<template>
-    <section aria-labelledby="detalle-postulante">
-        <v-btn variant="text" class="px-0 mb-4" prepend-icon="mdi-arrow-left" @click="router.push({ name: 'postulantes' })">
-            Mis postulantes
-        </v-btn>
-
-        <HeinrichHeroBanner id="detalle-postulante" :title="nombre" subtitle="Registro de postulante · Convocatoria 2027" />
-
-        <UiParentCard title="Datos del postulante" icon="mdi-account-outline" class="mb-6">
-            <v-card variant="outlined">
-                <v-card-item>
-                    <template #prepend>
-                        <v-avatar color="lightprimary"><v-icon color="primary">mdi-account-outline</v-icon></v-avatar>
-                    </template>
-                    <v-card-title class="admission-section-title">Información de {{ store.postulante.nombres.split(' ')[0] }}</v-card-title>
-                    <v-card-subtitle>{{ avance.completas }} de {{ avance.total }} secciones completas</v-card-subtitle>
-                    <template #append><v-chip color="primary" size="small" variant="tonal">{{ avance.porcentaje }}%</v-chip></template>
-                </v-card-item>
-                <v-card-actions class="justify-end px-4 pb-4">
-                    <v-btn color="primary" variant="text" append-icon="mdi-chevron-right" @click="editarPostulante">Completar información</v-btn>
-                </v-card-actions>
-            </v-card>
-        </UiParentCard>
-
-        <UiParentCard title="Tutores vinculados" icon="mdi-account-group-outline">
-            <v-card v-for="item in tutores" :key="item.entidad" variant="outlined" class="mb-3" role="button" tabindex="0" @click="editarTutor(item.entidad)" @keydown.enter="editarTutor(item.entidad)">
-                <v-card-item>
-                    <template #prepend><v-avatar color="lightprimary"><span class="text-primary font-weight-bold">{{ iniciales(item.tutor) }}</span></v-avatar></template>
-                    <v-card-title class="admission-section-title">{{ nombreCompleto(item.tutor) }}</v-card-title>
-                    <v-card-subtitle>{{ etiqueta(relacionesTutor, item.tutor.relacionTutorId) }} · Tutor vinculado</v-card-subtitle>
-                    <template #append><v-icon>mdi-chevron-right</v-icon></template>
-                </v-card-item>
-            </v-card>
-            <UiAddCard title="Agregar tutor" @click="editarTutor('tutor-segundo')" />
-        </UiParentCard>
-    </section>
-</template>
+<template><section><v-btn variant="text" class="px-0 mb-4" prepend-icon="mdi-arrow-left" @click="router.push({ name: 'postulantes' })">Volver a mis postulaciones</v-btn><HeinrichHeroBanner :title="nombre" :subtitle="convocatoria?.nombre || 'Postulación'" /><UiParentCard title="Información del postulante" icon="mdi-account-outline" class="mb-6"><v-row><v-col cols="12" md="4"><b>Nombre</b><div>{{ nombre }}</div></v-col><v-col cols="12" md="4"><b>Convocatoria</b><div>{{ convocatoria?.nombre || 'Sin asignar' }}</div></v-col><v-col cols="12" md="4"><b>Nivel / grado</b><div>{{ convocatoria?.grado || convocatoria?.nivel || 'Sin definir' }}</div></v-col><v-col cols="12"><b>Etapa actual</b><div>{{ stage?.nombre || 'Registro inicial' }}</div></v-col></v-row></UiParentCard><UiParentCard v-if="stage && admission" :title="stage.nombre" :subtitle="stage.descripcion" icon="mdi-format-list-bulleted-square"><template #action><v-chip v-if="!editable" color="warning" size="small" variant="tonal">Solo lectura</v-chip></template><div v-if="stage.fechaCierre" class="text-caption text-medium-emphasis mb-4">Cierre de actividades: {{ new Date(stage.fechaCierre).toLocaleString() }}</div><HeinrichStageRenderer :stage="stage" :postulante-id="postulanteId" :data="admission.respuestas" :mode="editable ? 'editable' : 'readonly'" @changed="dirty = true" /><template #footer-actions><v-btn v-if="editable && dirty" color="primary" @click="save">Guardar cambios</v-btn></template></UiParentCard><v-alert v-else type="info" variant="tonal">Aún no hay una etapa de admisión asignada para este postulante.</v-alert><v-snackbar v-model="saved" color="success">Cambios guardados localmente.</v-snackbar></section></template>

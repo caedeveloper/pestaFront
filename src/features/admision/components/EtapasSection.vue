@@ -13,6 +13,10 @@ type SectionDialog = { parentId?: string; section: AdmissionSection };
 type ActionDialog = { parentId?: string; action: AdmissionAction };
 const editing = ref<AdmissionStage | null>(null); const tab = ref<Tab>('content'); const message = ref(''); const deleting = ref<AdmissionStage | null>(null);
 const sectionDialog = ref<SectionDialog | null>(null); const actionDialog = ref<ActionDialog | null>(null);
+// This selection is intentionally separate from connectionIds. Once a target is
+// added it is removed from the available options, so retaining it in the select
+// would make Vuetify render its raw id instead of the stage name.
+const connectionToAdd = ref<string | null>(null);
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const ordered = computed(() => [...props.stages].sort((a, b) => a.orden - b.orden));
 const actionLabels: Record<AdmissionActionType, string> = { richText: 'Texto enriquecido', documentUpload: 'Carga de documentos', confirmation: 'Confirmación' };
@@ -41,7 +45,19 @@ function editAction(action: AdmissionAction, parentId?: string) { actionDialog.v
 function saveAction() { if (!actionDialog.value?.action.nombre.trim()) return; const { parentId, action } = actionDialog.value; const items = clone(getItems(parentId)); const index = items.findIndex(item => item.id === action.id); if (index < 0) items.push(action); else items.splice(index, 1, action); setItems(normalizeItems(items), parentId); actionDialog.value = null; }
 function removeItem(id: string, parentId?: string) { setItems(normalizeItems(getItems(parentId).filter(item => item.id !== id)), parentId); }
 function moveItem(index: number, delta: number, parentId?: string) { const items = clone(getItems(parentId)); const target = index + delta; if (target < 0 || target >= items.length) return; [items[index], items[target]] = [items[target], items[index]]; setItems(normalizeItems(items), parentId); }
-function addConnection(id: string | null) { if (!editing.value || !id || id === editing.value.id || editing.value.connectionIds?.includes(id)) return; editing.value.connectionIds = [...(editing.value.connectionIds || []), id]; }
+function addConnection(id: string | null) {
+  connectionToAdd.value = null;
+  if (!editing.value || !id || id === editing.value.id || editing.value.connectionIds?.includes(id)) return;
+  editing.value.connectionIds = [...(editing.value.connectionIds || []), id];
+  // Keep the parent convocatoria draft in sync as soon as a connection is made.
+  // This also makes the footer's “Guardar borrador” persist the new connection.
+  save(false);
+}
+function removeConnection(id: string) {
+  if (!editing.value) return;
+  editing.value.connectionIds = (editing.value.connectionIds || []).filter(value => value !== id);
+  save(false);
+}
 const availableConnections = computed(() => ordered.value.filter(stage => stage.id !== editing.value?.id && !editing.value?.connectionIds?.includes(stage.id)));
 </script>
 
@@ -53,7 +69,7 @@ const availableConnections = computed(() => ordered.value.filter(stage => stage.
       <v-row class="mb-1"><v-col cols="12" md="6"><v-text-field v-model="editing.nombre" label="Nombre de la etapa *" placeholder="Ej. Registro de postulantes" /></v-col><v-col cols="12" md="6"><v-textarea v-model="editing.descripcion" label="Descripción" placeholder="Describe brevemente el objetivo de esta etapa..." rows="1" auto-grow /></v-col></v-row>
       <v-tabs v-model="tab"><v-tab value="content">Contenido</v-tab><v-tab value="connections">Conexiones</v-tab><v-tab value="schedule">Programación</v-tab></v-tabs><v-divider class="mb-5" />
       <div v-if="tab === 'content'"><div class="d-flex flex-wrap justify-space-between align-center ga-3 mb-4"><div><div class="text-h6">Contenido de la etapa</div><div class="text-body-2 text-medium-emphasis">Organiza libremente secciones, subsecciones y acciones.</div></div><div class="d-flex ga-2"><v-btn variant="outlined" color="primary" prepend-icon="mdi-folder-plus-outline" @click="newSection()">Sección</v-btn><v-btn color="primary" prepend-icon="mdi-plus" @click="newAction()">Acción</v-btn></div></div><v-empty-state v-if="!editing.contenido?.length" icon="mdi-folder-outline" title="Aún no hay contenido" text="Agregue una sección o una acción directa para comenzar." /><StageContentTree v-else :items="editing.contenido" @edit-section="editSection" @edit-action="editAction" @remove="removeItem" @move="moveItem" @add-section="newSection" @add-action="newAction" /></div>
-      <div v-else-if="tab === 'connections'"><div class="text-h6">Conexiones de la etapa</div><p class="text-body-2 text-medium-emphasis mb-5">Selecciona las etapas a las que esta etapa puede conectar.</p><v-select :items="availableConnections" item-title="nombre" item-value="id" label="Agregar conexión" clearable @update:model-value="addConnection" /><v-empty-state v-if="!editing.connectionIds?.length" icon="mdi-source-branch" title="Sin conexiones configuradas" text="Seleccione una etapa destino para crear una conexión." /><v-list v-else border rounded><v-list-item v-for="id in editing.connectionIds" :key="id" :title="ordered.find(stage => stage.id === id)?.nombre || 'Etapa no disponible'" prepend-icon="mdi-arrow-right-circle-outline"><template #append><v-btn size="small" variant="text" color="error" icon="mdi-delete-outline" @click="editing.connectionIds = editing.connectionIds?.filter(value => value !== id)" /></template></v-list-item></v-list></div>
+      <div v-else-if="tab === 'connections'"><div class="text-h6">Conexiones de la etapa</div><p class="text-body-2 text-medium-emphasis mb-5">Selecciona las etapas a las que esta etapa puede conectar.</p><v-select v-model="connectionToAdd" :items="availableConnections" item-title="nombre" item-value="id" label="Agregar conexión" clearable @update:model-value="addConnection" /><v-empty-state v-if="!editing.connectionIds?.length" icon="mdi-source-branch" title="Sin conexiones configuradas" text="Seleccione una etapa destino para crear una conexión." /><v-list v-else border rounded><v-list-item v-for="id in editing.connectionIds" :key="id" :title="ordered.find(stage => stage.id === id)?.nombre || 'Etapa no disponible'" prepend-icon="mdi-arrow-right-circle-outline"><template #append><v-btn size="small" variant="text" color="error" icon="mdi-delete-outline" @click="removeConnection(id)" /></template></v-list-item></v-list></div>
       <v-row v-else><v-col cols="12" md="4"><v-text-field v-model="editing.fechaInicio" type="datetime-local" label="Fecha de apertura" hint="Opcional" persistent-hint /></v-col><v-col cols="12" md="4"><v-text-field v-model="editing.fechaCierre" type="datetime-local" label="Fecha de cierre de actividades" hint="Opcional" persistent-hint /></v-col><v-col cols="12" md="4"><v-text-field v-model="editing.fechaPublicacion" type="datetime-local" label="Fecha de publicación de resultados" hint="Opcional" persistent-hint /></v-col></v-row>
     </UiParentCard>
   </template>
