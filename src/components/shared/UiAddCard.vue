@@ -12,7 +12,7 @@ const emit = defineEmits<{ click: [] }>();
 <template>
     <v-card class="ui-add-card" role="button" tabindex="0" @click="emit('click')" @keydown.enter="emit('click')">
         <v-card-text class="d-flex align-center justify-center ga-3 py-8">
-            <v-avatar color="lightprimary" size="70"><v-icon color="primary" size="24">{{ icon }}</v-icon></v-avatar>
+            <v-avatar color="grey-lighten-3" size="70"><v-icon color="grey-darken-1" size="24">{{ icon }}</v-icon></v-avatar>
             <span class="font-weight-medium">{{ title }}</span>
         </v-card-text>
     </v-card>

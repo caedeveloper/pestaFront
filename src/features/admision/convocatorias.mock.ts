@@ -1,7 +1,17 @@
 export type ConvocatoriaEstado = 'Borrador' | 'Programada' | 'Abierta' | 'Cerrada' | 'Finalizada';
 export type TipoAlcance = 'nivel' | 'grado';
 export type AdmissionActionType = 'richText' | 'documentUpload' | 'confirmation';
-export type AdmissionDocument = { id: string; nombre: string; obligatorio: boolean; descripcion?: string };
+export type AdmissionDocumentTemplate = { nombre: string; tipo: string; dataUrl: string };
+export type AdmissionDocument = {
+    id: string;
+    nombre: string;
+    obligatorio: boolean;
+    descripcion?: string;
+    plantilla?: AdmissionDocumentTemplate;
+    formatosPermitidos?: string;
+    tamanoMaximo?: number | null;
+    permitirReemplazo?: boolean;
+};
 export type AdmissionAction = {
     id: string;
     nombre: string;

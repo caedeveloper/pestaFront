@@ -47,6 +47,7 @@ async function guardar() {
 </script>
 
 <template>
+    <v-btn v-if="!embedded" variant="text" class="px-0 mb-4" prepend-icon="mdi-arrow-left" @click="emit('volver')">Volver a datos de la postulación</v-btn>
     <HeinrichHeroBanner v-if="!embedded" title="Actualización de datos" :subtitle="nombre" />
     <MenuSecciones v-if="!embedded" :secciones="secciones" />
     <v-form :class="{ 'formulario-solo-lectura': readonly }" @submit.prevent="guardar">

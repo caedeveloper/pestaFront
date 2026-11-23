@@ -38,6 +38,10 @@ const soloLectura = computed(() => {
 });
 
 function volver() {
+    if (route.query.from === 'datos') {
+        router.push({ name: 'postulante-datos', params: { postulanteId: store.postulanteId } });
+        return;
+    }
     if (store.registroNuevo) {
         router.push({ name: 'postulantes' });
         return;

@@ -4,7 +4,7 @@ import UiParentCard from '@/components/shared/UiParentCard.vue';
 import UiModal from '@/components/shared/UiModal.vue';
 import HeinrichRichTextEditor from '@/components/heinrich/HeinrichRichTextEditor.vue';
 import StageContentTree from './StageContentTree.vue';
-import type { AdmissionAction, AdmissionActionType, AdmissionContentItem, AdmissionSection, AdmissionStage } from '../convocatorias.mock';
+import type { AdmissionAction, AdmissionActionType, AdmissionContentItem, AdmissionDocument, AdmissionSection, AdmissionStage } from '../convocatorias.mock';
 import { newStageTutorPermissions } from '../stageTutorPermissions';
 
 const props = defineProps<{ convocatoriaId: string; stages: AdmissionStage[] }>();
@@ -225,6 +225,17 @@ function removeConnection(id: string) {
 const availableConnections = computed(() =>
     ordered.value.filter((stage) => stage.id !== editing.value?.id && !editing.value?.connectionIds?.includes(stage.id))
 );
+async function loadDocumentTemplate(document: AdmissionDocument, event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+    document.plantilla = { nombre: file.name, tipo: file.type, dataUrl };
+}
 </script>
 
 <template>
@@ -458,6 +469,8 @@ const availableConnections = computed(() =>
                         label="Descripción opcional"
                         hide-details
                         class="mb-2" />
+                    <v-row dense class="mb-1"><v-col cols="12" md="5"><v-text-field v-model="document.formatosPermitidos" density="compact" label="Formatos permitidos" placeholder="PDF, JPG, PNG" hide-details /></v-col><v-col cols="12" md="4"><v-text-field v-model.number="document.tamanoMaximo" density="compact" type="number" min="1" label="Tamaño máximo (MB)" hide-details /></v-col><v-col cols="12" md="3" class="d-flex align-center"><v-checkbox v-model="document.permitirReemplazo" density="compact" label="Permitir reemplazo" hide-details /></v-col></v-row>
+                    <div class="d-flex flex-wrap align-center ga-2 mb-2"><v-btn size="small" variant="outlined" prepend-icon="mdi-file-upload-outline" @click="($refs[`template-${document.id}`] as HTMLInputElement)?.click()">{{ document.plantilla ? 'Cambiar plantilla' : 'Subir plantilla' }}</v-btn><span v-if="document.plantilla" class="text-caption text-medium-emphasis">{{ document.plantilla.nombre }}</span><v-btn v-if="document.plantilla" size="x-small" variant="text" color="error" icon="mdi-close" @click="document.plantilla = undefined" /><input :ref="`template-${document.id}`" type="file" class="d-none" @change="loadDocumentTemplate(document, $event)" /></div>
                     <div class="d-flex align-center">
                         <v-checkbox v-model="document.obligatorio" label="Obligatorio" density="compact" hide-details /><v-spacer /><v-btn
                             size="small"
@@ -466,17 +479,7 @@ const availableConnections = computed(() =>
                             icon="mdi-delete-outline"
                             @click="actionDialog.action.documentos?.splice(index, 1)"
                         /></div></v-card
-                ><v-text-field
-                    v-model="actionDialog.action.formatosPermitidos"
-                    label="Formatos permitidos"
-                    placeholder="PDF, JPG, PNG" /><v-text-field
-                    v-model.number="actionDialog.action.tamanoMaximo"
-                    type="number"
-                    min="1"
-                    label="Tamaño máximo por archivo (MB)" /><v-checkbox
-                    v-model="actionDialog.action.permitirReemplazo"
-                    label="Permitir reemplazo de archivo"
-                    hide-details /></template
+                ></template
             ><template v-else
                 ><v-textarea v-model="actionDialog.action.descripcion" label="Descripción / instrucción" rows="2" auto-grow /><v-textarea
                     v-model="actionDialog.action.textoConfirmacion"
