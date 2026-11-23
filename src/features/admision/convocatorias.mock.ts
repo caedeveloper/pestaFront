@@ -1,9 +1,26 @@
 export type ConvocatoriaEstado = 'Borrador' | 'Programada' | 'Abierta' | 'Cerrada' | 'Finalizada';
 export type TipoAlcance = 'nivel' | 'grado';
-export type AdmissionAction = { id: string; nombre: string; tipo: string; descripcion: string; orden: number };
-export type AdmissionSection = { id: string; nombre: string; descripcion: string; orden: number; acciones: AdmissionAction[] };
+export type AdmissionActionType = 'richText' | 'documentUpload' | 'confirmation';
+export type AdmissionDocument = { id: string; nombre: string; obligatorio: boolean; descripcion?: string };
+export type AdmissionAction = {
+    id: string;
+    nombre: string;
+    tipo: AdmissionActionType;
+    descripcion?: string;
+    orden: number;
+    richText?: string;
+    documentos?: AdmissionDocument[];
+    formatosPermitidos?: string;
+    tamanoMaximo?: number | null;
+    permitirReemplazo?: boolean;
+    textoConfirmacion?: string;
+    etiquetaConfirmacion?: string;
+    obligatorio?: boolean;
+};
+export type AdmissionContentItem = AdmissionAction | AdmissionSection;
+export type AdmissionSection = { id: string; nombre: string; descripcion?: string; orden: number; tipo: 'section'; contenido: AdmissionContentItem[] };
 /** A destination stage id. Kept as ids so it remains stable when stages are reordered. */
-export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds: string[]; secciones?: AdmissionSection[]; connectionIds?: string[] };
+export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds?: string[]; contenido?: AdmissionContentItem[]; secciones?: AdmissionSection[]; connectionIds?: string[] };
 
 export type Convocatoria = {
     id: string;
