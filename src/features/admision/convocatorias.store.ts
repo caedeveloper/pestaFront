@@ -7,7 +7,7 @@ const read = (): Convocatoria[] => {
     if (typeof window === 'undefined') return clone(convocatoriasMock);
     try {
         const saved = window.localStorage.getItem(storageKey);
-        return saved ? (JSON.parse(saved) as Convocatoria[]).map((item) => ({ ...item, etapas: item.etapas || [] })) : clone(convocatoriasMock);
+        return saved ? (JSON.parse(saved) as Convocatoria[]).map((item) => ({ ...item, etapas: (item.etapas || []).map((stage) => ({ ...stage, workflowIds: stage.workflowIds || [], secciones: stage.secciones || [], connectionIds: stage.connectionIds || [] })) })) : clone(convocatoriasMock);
     } catch { return clone(convocatoriasMock); }
 };
 

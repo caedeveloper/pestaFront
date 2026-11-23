@@ -1,6 +1,9 @@
 export type ConvocatoriaEstado = 'Borrador' | 'Programada' | 'Abierta' | 'Cerrada' | 'Finalizada';
 export type TipoAlcance = 'nivel' | 'grado';
-export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds: string[] };
+export type AdmissionAction = { id: string; nombre: string; tipo: string; descripcion: string; orden: number };
+export type AdmissionSection = { id: string; nombre: string; descripcion: string; orden: number; acciones: AdmissionAction[] };
+/** A destination stage id. Kept as ids so it remains stable when stages are reordered. */
+export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds: string[]; secciones?: AdmissionSection[]; connectionIds?: string[] };
 
 export type Convocatoria = {
     id: string;
