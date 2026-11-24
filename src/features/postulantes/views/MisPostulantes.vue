@@ -6,14 +6,14 @@ import UiParentCard from '@/components/shared/UiParentCard.vue';
 import UiAddCard from '@/components/shared/UiAddCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import { convocatorias } from '@/features/convocatorias/convocatorias.services';
-import { admissionFor, ensureApplicantAdmissions } from '@/features/solicitudes-postulantes/solicitudes-postulantes.services';
+import { admissionCalls } from '@/features/admission-calls/admission-calls.services';
+import { obtenerApplicantApplicationCache, asegurarApplicantApplicationsCache } from '@/features/applicant-applications/applicant-applications.services';
 import { iniciales, nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
 const router = useRouter(); const store = useRegistroPostulanteStore(); const authStore = useAuthStore();
-const convocatoria = computed(() => convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0]);
-onMounted(async () => { await store.cargarRegistro(); if (convocatoria.value) ensureApplicantAdmissions(store.registros, convocatoria.value.id, convocatoria.value.etapas); });
+const convocatoria = computed(() => admissionCalls.value.find(item => item.etapas.length) || admissionCalls.value[0]);
+onMounted(async () => { await store.cargarRegistro(); if (convocatoria.value) asegurarApplicantApplicationsCache(store.registros, convocatoria.value.id, convocatoria.value.etapas); });
 const postulaciones = computed(() => store.registros.filter(registro => registroAsignadoA(registro, authStore.user?.tutorId ?? null, authStore.user?.username ?? '')).map(registro => {
-  const admission = admissionFor(registro.postulanteId); const call = convocatorias.value.find(item => item.id === admission?.convocatoriaId) || convocatoria.value; const stage = call?.etapas.find(item => item.id === admission?.etapaActualId);
+  const admission = obtenerApplicantApplicationCache(registro.postulanteId); const call = admissionCalls.value.find(item => item.id === admission?.convocatoriaId) || convocatoria.value; const stage = call?.etapas.find(item => item.id === admission?.etapaActualId);
   return { id: registro.postulanteId, nombre: nombreCompleto(registro.postulante), iniciales: iniciales(registro.postulante), convocatoria: call?.nombre || 'Sin convocatoria', grado: call?.grado || call?.nivel || 'Sin definir', etapa: stage?.nombre || 'Registro inicial' };
 }));
 async function agregarPostulante() {
@@ -36,7 +36,7 @@ async function agregarPostulante() {
                     }}</span></v-avatar></template><v-card-title>{{
                 postulacion.nombre }}</v-card-title><v-card-subtitle>{{ postulacion.grado
                 }}</v-card-subtitle></v-card-item><v-card-text>
-              <div class="text-body-2 mb-2"><b>Convocatoria:</b> {{ postulacion.convocatoria }}</div>
+              <div class="text-body-2 mb-2"><b>AdmissionCall:</b> {{ postulacion.convocatoria }}</div>
               <div class="text-body-2"><b>Etapa actual:</b> {{ postulacion.etapa }}</div>
             </v-card-text><v-card-actions class="justify-end flex-wrap px-4 pb-4 ga-2"><v-btn variant="outlined"
                 @click="router.push({ name: 'postulante-datos', params: { postulanteId: postulacion.id } })">Ver

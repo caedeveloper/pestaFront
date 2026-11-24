@@ -1,4 +1,11 @@
-export interface Convocatoria {
+import type {
+    DataTableQuery,
+    PagedResponse
+} from '@/components/heinrich/heinrich-data-table/data-table.types';
+
+// #region AdmissionCall
+
+export interface AdmissionCall {
     id: string;
     nombre: string;
     descripcion?: string;
@@ -18,39 +25,62 @@ export interface Convocatoria {
     etapas: AdmissionStage[];
 }
 
-export interface ConvocatoriaFiltros {
+// #endregion
+
+// #region Requests and Responses
+
+export interface BuscarAdmissionCallsRequest {
     nombre?: string;
     anio?: string;
     grado?: string;
     estado?: string;
 }
 
+export interface BuscarAdmissionCallsPaginadoRequest
+    extends BuscarAdmissionCallsRequest {
+
+    pagination: DataTableQuery<AdmissionCall>;
+}
+
+export type BuscarAdmissionCallsResponse =
+    PagedResponse<AdmissionCall>;
+
+// #endregion
+
+// #region Stage
+
 export interface AdmissionStage {
     id: string;
-    convocatoriaId: string;
+    admissionCallId: string;
     nombre: string;
     descripcion: string;
     orden: number;
     fechaInicio: string;
     fechaCierre: string;
     fechaPublicacion: string;
-    workflowIds?: string[];
-    contenido?: AdmissionContentItem[];
-    secciones?: AdmissionSection[];
-    connectionIds?: string[];
-    tutorPermissions?: StageTutorPermissions;
+    contenido: AdmissionContentItem[];
+    connectionIds: string[];
+    guardianPermissions: StageGuardianPermissions;
 }
+
+// #endregion
+
+// #region Section
 
 export interface AdmissionSection {
     id: string;
     nombre: string;
     descripcion?: string;
     orden: number;
-    tipo: 'section';
+    tipo: string;
     contenido: AdmissionContentItem[];
 }
 
-export interface AdmissionAction {
+// #endregion
+
+// #region Activity
+
+export interface AdmissionActivity {
     id: string;
     nombre: string;
     tipo: string;
@@ -65,6 +95,10 @@ export interface AdmissionAction {
     etiquetaConfirmacion?: string;
     obligatorio?: boolean;
 }
+
+// #endregion
+
+// #region Document
 
 export interface AdmissionDocument {
     id: string;
@@ -83,19 +117,33 @@ export interface AdmissionDocumentTemplate {
     dataUrl: string;
 }
 
-export interface StageTutorPermissions {
+// #endregion
+
+// #region Permissions
+
+export interface StageGuardianPermissions {
     canEditApplicant: boolean;
     canEditOwnData: boolean;
-    canAddTutors: boolean;
-    canManageTutors: boolean;
+    canAddGuardians: boolean;
+    canManageGuardians: boolean;
     canEditDocuments: boolean;
 }
 
-export interface CatalogoItem {
+// #endregion
+
+// #region Catalogs
+
+export interface CatalogItem {
     codigo: string;
     nombre: string;
 }
 
+// #endregion
+
+// #region Content
+
 export type AdmissionContentItem =
-    | AdmissionAction
+    | AdmissionActivity
     | AdmissionSection;
+
+// #endregion

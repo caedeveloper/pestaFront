@@ -1,17 +1,17 @@
-import { type Convocatoria, type ConvocatoriaEstado, convocatoriasMock } from './convocatorias.mock';
+import { type AdmissionCall, type AdmissionCallStatus, convocatoriasMock } from './convocatorias.mock';
 
 const storageKey = 'heinrich-admision-convocatorias';
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
-export function readConvocatoriasMock(): Convocatoria[] {
+export function readConvocatoriasMock(): AdmissionCall[] {
     if (typeof window === 'undefined') return clone(convocatoriasMock);
     try { return clone(JSON.parse(window.localStorage.getItem(storageKey) || 'null') || convocatoriasMock); } catch { return clone(convocatoriasMock); }
 }
-export function writeConvocatoriasMock(items: Convocatoria[]): void {
+export function writeConvocatoriasMock(items: AdmissionCall[]): void {
     if (typeof window !== 'undefined') window.localStorage.setItem(storageKey, JSON.stringify(items));
 }
 
-export const resolveEstado = (item: Pick<Convocatoria, 'publicada' | 'finalizada' | 'apertura' | 'cierre'>): ConvocatoriaEstado => {
+export const resolveEstado = (item: Pick<AdmissionCall, 'publicada' | 'finalizada' | 'apertura' | 'cierre'>): AdmissionCallStatus => {
     if (item.finalizada) return 'Finalizada';
     if (!item.publicada) return 'Borrador';
     const now = new Date();
@@ -20,7 +20,7 @@ export const resolveEstado = (item: Pick<Convocatoria, 'publicada' | 'finalizada
     return 'Abierta';
 };
 
-export function saveConvocatoriaMock(item: Convocatoria): Convocatoria {
+export function saveConvocatoriaMock(item: AdmissionCall): AdmissionCall {
     const value = { ...item, estado: resolveEstado(item) };
     const items = readConvocatoriasMock();
     const index = items.findIndex((current) => current.id === value.id);

@@ -6,9 +6,9 @@ import UiAddCard from '@/components/shared/UiAddCard.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import { convocatorias } from '@/features/convocatorias/convocatorias.services';
-import { admissionFor, ensureApplicantAdmissions } from '@/features/solicitudes-postulantes/solicitudes-postulantes.services';
-import { effectiveStageTutorPermissions } from '@/features/convocatorias/convocatorias.helpers';
+import { admissionCalls } from '@/features/admission-calls/admission-calls.services';
+import { obtenerApplicantApplicationCache, asegurarApplicantApplicationsCache } from '@/features/applicant-applications/applicant-applications.services';
+import { obtenerEffectiveStageGuardianPermissions } from '@/features/admission-calls/admission-calls.helpers';
 import { etiqueta, iniciales, nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
 import { relacionesTutor } from '../postulantes.catalogos';
 import type { TutorEntidadId } from '../postulantes.types';
@@ -16,10 +16,10 @@ import type { TutorEntidadId } from '../postulantes.types';
 const route = useRoute(); const router = useRouter(); const store = useRegistroPostulanteStore(); const auth = useAuthStore();
 const postulanteId = computed(() => Number(route.params.postulanteId));
 const registro = computed(() => store.registros.find(item => item.postulanteId === postulanteId.value));
-const admission = computed(() => admissionFor(postulanteId.value));
-const convocatoria = computed(() => convocatorias.value.find(item => item.id === admission.value?.convocatoriaId));
+const admission = computed(() => obtenerApplicantApplicationCache(postulanteId.value));
+const convocatoria = computed(() => admissionCalls.value.find(item => item.id === admission.value?.convocatoriaId));
 const stage = computed(() => convocatoria.value?.etapas.find(item => item.id === admission.value?.etapaActualId));
-const permissions = computed(() => effectiveStageTutorPermissions(stage.value));
+const permissions = computed(() => obtenerEffectiveStageGuardianPermissions(stage.value));
 const nombre = computed(() => registro.value ? nombreCompleto(registro.value.postulante) : 'Postulante');
 const avance = computed(() => registro.value ? store.avanceDeRegistro(registro.value, 'postulante') : { completas: 0, total: 0, porcentaje: 0 });
 const isResponsibleTutor = computed(() => !auth.user?.tutorId || registro.value?.tutorPrincipalId === auth.user.tutorId);
@@ -32,8 +32,8 @@ const tutores = computed(() => {
     ].filter(({ tutor }) => Boolean(tutor.nombres)).map((item) => ({ ...item, avance: store.avanceDeRegistro(current, item.entidad) }));
 });
 onMounted(async () => {
-    await store.cargarRegistro(); const current = registro.value; const call = convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0];
-    if (call) ensureApplicantAdmissions(store.registros, call.id, call.etapas);
+    await store.cargarRegistro(); const current = registro.value; const call = admissionCalls.value.find(item => item.etapas.length) || admissionCalls.value[0];
+    if (call) asegurarApplicantApplicationsCache(store.registros, call.id, call.etapas);
     if (!current || !registroAsignadoA(current, auth.user?.tutorId ?? null, auth.user?.username ?? '')) router.replace({ name: 'postulantes' }); else store.seleccionarPostulante(current.postulanteId);
 });
 function editarPostulante() { if (registro.value) router.push({ name: 'postulante-registro', params: { postulanteId: registro.value.postulanteId }, query: { from: 'datos' } }); }

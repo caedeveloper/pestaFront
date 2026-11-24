@@ -1,5 +1,5 @@
-export type ConvocatoriaEstado = 'Borrador' | 'Programada' | 'Abierta' | 'Cerrada' | 'Finalizada';
-export type TipoAlcance = 'nivel' | 'grado';
+export type AdmissionCallStatus = 'Borrador' | 'Programada' | 'Abierta' | 'Cerrada' | 'Finalizada';
+export type ScopeType = 'nivel' | 'grado';
 export type AdmissionActionType = 'richText' | 'documentUpload' | 'confirmation';
 export type AdmissionDocumentTemplate = { nombre: string; tipo: string; dataUrl: string };
 export type AdmissionDocument = {
@@ -29,7 +29,7 @@ export type AdmissionAction = {
 };
 export type AdmissionContentItem = AdmissionAction | AdmissionSection;
 export type AdmissionSection = { id: string; nombre: string; descripcion?: string; orden: number; tipo: 'section'; contenido: AdmissionContentItem[] };
-export interface StageTutorPermissions {
+export interface StageGuardianPermissions {
     canEditApplicant: boolean;
     canEditOwnData: boolean;
     canAddTutors: boolean;
@@ -37,16 +37,16 @@ export interface StageTutorPermissions {
     canEditDocuments: boolean;
 }
 /** A destination stage id. Kept as ids so it remains stable when stages are reordered. */
-export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds?: string[]; contenido?: AdmissionContentItem[]; secciones?: AdmissionSection[]; connectionIds?: string[]; tutorPermissions?: StageTutorPermissions };
+export type AdmissionStage = { id: string; convocatoriaId: string; nombre: string; descripcion: string; orden: number; fechaInicio: string; fechaCierre: string; fechaPublicacion: string; workflowIds?: string[]; contenido?: AdmissionContentItem[]; secciones?: AdmissionSection[]; connectionIds?: string[]; tutorPermissions?: StageGuardianPermissions };
 
-export type Convocatoria = {
+export type AdmissionCall = {
     id: string;
     nombre: string;
     descripcion?: string;
     anio: string;
     nivel: string;
     grado: string;
-    tipoAlcance: TipoAlcance;
+    tipoAlcance: ScopeType;
     apertura: string;
     cierre: string;
     registros: number;
@@ -55,11 +55,11 @@ export type Convocatoria = {
     duracionReservaMinutos: number;
     publicada: boolean;
     finalizada: boolean;
-    estado: ConvocatoriaEstado;
+    estado: AdmissionCallStatus;
     etapas: AdmissionStage[];
 };
 
-export const convocatoriasMock: Convocatoria[] = [
+export const convocatoriasMock: AdmissionCall[] = [
     { id: '1', nombre: 'Kindergarten 2027', descripcion: 'Proceso de admisión inicial', anio: '2027', nivel: 'Inicial', grado: 'Kindergarten', tipoAlcance: 'grado', apertura: '2026-06-01T08:00', cierre: '2026-09-30T18:00', registros: 80, cupos: 100, postulantes: 120, duracionReservaMinutos: 30, publicada: true, finalizada: false, estado: 'Abierta', etapas: [
         { id: 'stage-1', convocatoriaId: '1', nombre: 'Documentación', descripcion: 'Adjunta los documentos requeridos para continuar con el proceso de admisión.', orden: 1, fechaInicio: '', fechaCierre: '', fechaPublicacion: '', connectionIds: ['stage-2'], contenido: [
             { id: 'welcome', tipo: 'richText', nombre: 'Bienvenida', orden: 1, richText: '<h2>Bienvenidos</h2><p>Adjunta los documentos solicitados y confirma que la información es correcta.</p>' },

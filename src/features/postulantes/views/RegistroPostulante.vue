@@ -6,9 +6,9 @@ import { useAuthStore } from '@/stores/auth';
 import FormularioPostulante from '../components/FormularioPostulante.vue';
 import FormularioTutor from '../components/FormularioTutor.vue';
 import { registroAsignadoA } from '../postulantes.helpers';
-import { convocatorias } from '@/features/convocatorias/convocatorias.services';
-import { admissionFor } from '@/features/solicitudes-postulantes/solicitudes-postulantes.services';
-import { effectiveStageTutorPermissions } from '@/features/convocatorias/convocatorias.helpers';
+import { admissionCalls } from '@/features/admission-calls/admission-calls.services';
+import { obtenerApplicantApplicationCache } from '@/features/applicant-applications/applicant-applications.services';
+import { obtenerEffectiveStageGuardianPermissions } from '@/features/admission-calls/admission-calls.helpers';
 
 const route = useRoute();
 const router = useRouter();
@@ -21,14 +21,14 @@ const entidad = computed(() => {
     return null;
 });
 const stage = computed(() => {
-    const admission = admissionFor(Number(route.params.postulanteId));
-    const call = convocatorias.value.find(item => item.id === admission?.convocatoriaId);
+    const admission = obtenerApplicantApplicationCache(Number(route.params.postulanteId));
+    const call = admissionCalls.value.find(item => item.id === admission?.convocatoriaId);
     return call?.etapas.find(item => item.id === admission?.etapaActualId);
 });
 const registroActual = computed(() => store.registros.find(item => item.postulanteId === Number(route.params.postulanteId)));
 const soloLectura = computed(() => {
     if (!stage.value || route.name === 'postulante-tutor-responsable-nuevo') return false;
-    const permissions = effectiveStageTutorPermissions(stage.value);
+    const permissions = obtenerEffectiveStageGuardianPermissions(stage.value);
     if (entidad.value === 'postulante') return !permissions.canEditApplicant;
     const esTutorResponsable = !authStore.user?.tutorId || registroActual.value?.tutorPrincipalId === authStore.user.tutorId;
     if (route.query.operation === 'add') return !permissions.canAddTutors || !esTutorResponsable;
