@@ -2,13 +2,101 @@ import useAdmissionCallsService from '@/features/admission-calls/admission-calls
 import { nombreCompleto } from '@/features/postulantes/postulantes.helpers';
 import type { AdmissionStage } from '@/features/admission-calls/admission-calls.types';
 import { crearApplicantApplication, formatearFechaApplicantApplication, obtenerPrimerStage } from '../applicant-applications.helpers';
-import type { ApplicantApplication, BuscarApplicantApplicationsPaginadoRequest, BuscarApplicantApplicationsResponse, MoverApplicantApplicationStageRequest } from '../applicant-applications.types';
+import type {
+    ApplicantApplication,
+    BuscarApplicantApplicationsPaginadoRequest,
+    BuscarApplicantApplicationsResponse,
+    MoverApplicantApplicationStageRequest
+} from '../applicant-applications.types';
 import { applicantApplicationsStore } from './applicant-applications.store';
 
 export const applicantApplicationsMock = {
-    obtenerApplicantApplication(postulanteId: number): ApplicantApplication | undefined { return applicantApplicationsStore.get(postulanteId); },
-    asegurarApplicantApplications(postulanteIds: number[], convocatoriaId: string, stages: AdmissionStage[]): ApplicantApplication[] { const initial = obtenerPrimerStage(stages); if (!initial) return applicantApplicationsStore.list(); const items = applicantApplicationsStore.list(); let changed = false; postulanteIds.forEach((id, index) => { if (!items.some(item => item.postulanteId === id)) { items.push(crearApplicantApplication(id, convocatoriaId, stages[index % stages.length] ?? initial)); changed = true; } }); if (changed) applicantApplicationsStore.setAll(items); return items; },
-    guardarApplicantApplication(item: ApplicantApplication): ApplicantApplication { return applicantApplicationsStore.set(item); },
-    moverApplicantApplicationStage(request: MoverApplicantApplicationStageRequest): ApplicantApplication { const item = applicantApplicationsStore.get(request.postulanteId); const destination = request.stages.find(stage => stage.id === request.destinoId); if (!item || !destination || item.etapaActualId === destination.id) throw new Error('No se pudo cambiar la etapa del postulante.'); const originId = item.etapaActualId; item.etapaActualId = destination.id; item.historial.push({ origenId: originId, destinoId: destination.id, fecha: new Date().toISOString(), observacion: request.observacion?.trim() || undefined, responsable: 'Personal de admisión' }); return applicantApplicationsStore.set(item); },
-    async buscarApplicantApplications(request: BuscarApplicantApplicationsPaginadoRequest): Promise<BuscarApplicantApplicationsResponse> { const { pagination, registros, search, convocatoriaId, stageId } = request; if (!Number.isInteger(pagination.page) || pagination.page < 1 || !Number.isInteger(pagination.itemsPerPage) || pagination.itemsPerPage < 1 || pagination.itemsPerPage > 100) throw new Error('Paginación inválida.'); const service = useAdmissionCallsService(); const calls = await Promise.all((await service.buscarAdmissionCalls({}, { page: 1, itemsPerPage: 100 })).items.map(item => service.obtenerAdmissionCall(item.id))); const applications = applicantApplicationsStore.list(); const term = search?.trim().toLowerCase() ?? ''; let items = registros.map(registro => { const application = applications.find(value => value.postulanteId === registro.postulanteId); const call = calls.find(value => value?.id === application?.convocatoriaId); const stage = call?.etapas.find(value => value.id === application?.etapaActualId); return { id: registro.postulanteId, postulante: nombreCompleto(registro.postulante), convocatoria: call?.nombre ?? 'Sin asignar', convocatoriaId: call?.id ?? '', grado: call?.grado || call?.nivel || '', tutor: nombreCompleto(registro.tutorPrincipal), documento: registro.postulante.documentoIdentidad, etapa: stage?.nombre ?? 'Registro inicial', etapaId: stage?.id ?? '', fecha: formatearFechaApplicantApplication(application?.fechaRegistro ?? ''), esRegistroInicial: stage?.id === obtenerPrimerStage(call?.etapas ?? [])?.id }; }).filter(item => (!convocatoriaId || item.convocatoriaId === convocatoriaId) && (!stageId || item.etapaId === stageId) && (!term || `${item.postulante} ${item.tutor} ${item.documento}`.toLowerCase().includes(term))); if (pagination.sort) { const { key, direction } = pagination.sort; const collator = new Intl.Collator('es-PE', { numeric: true, sensitivity: 'base' }); items = [...items].sort((a, b) => (direction === 'desc' ? -1 : 1) * collator.compare(String(a[key] ?? ''), String(b[key] ?? ''))); } const start = (pagination.page - 1) * pagination.itemsPerPage; return { items: items.slice(start, start + pagination.itemsPerPage), totalItems: items.length }; }
+    obtenerApplicantApplication(postulanteId: number): ApplicantApplication | undefined {
+        return applicantApplicationsStore.get(postulanteId);
+    },
+    asegurarApplicantApplications(postulanteIds: number[], convocatoriaId: string, stages: AdmissionStage[]): ApplicantApplication[] {
+        const initial = obtenerPrimerStage(stages);
+        if (!initial) return applicantApplicationsStore.list();
+        const items = applicantApplicationsStore.list();
+        let changed = false;
+        postulanteIds.forEach((id, index) => {
+            if (!items.some((item) => item.postulanteId === id)) {
+                items.push(crearApplicantApplication(id, convocatoriaId, stages[index % stages.length] ?? initial));
+                changed = true;
+            }
+        });
+        if (changed) applicantApplicationsStore.setAll(items);
+        return items;
+    },
+    guardarApplicantApplication(item: ApplicantApplication): ApplicantApplication {
+        return applicantApplicationsStore.set(item);
+    },
+    moverApplicantApplicationStage(request: MoverApplicantApplicationStageRequest): ApplicantApplication {
+        const item = applicantApplicationsStore.get(request.postulanteId);
+        const destination = request.stages.find((stage) => stage.id === request.destinoId);
+        if (!item || !destination || item.etapaActualId === destination.id) throw new Error('No se pudo cambiar la etapa del postulante.');
+        const originId = item.etapaActualId;
+        item.etapaActualId = destination.id;
+        item.historial.push({
+            origenId: originId,
+            destinoId: destination.id,
+            fecha: new Date().toISOString(),
+            observacion: request.observacion?.trim() || undefined,
+            responsable: 'Personal de admisión'
+        });
+        return applicantApplicationsStore.set(item);
+    },
+    async buscarApplicantApplications(request: BuscarApplicantApplicationsPaginadoRequest): Promise<BuscarApplicantApplicationsResponse> {
+        const { pagination, registros, search, convocatoriaId, stageId } = request;
+        if (
+            !Number.isInteger(pagination.page) ||
+            pagination.page < 1 ||
+            !Number.isInteger(pagination.itemsPerPage) ||
+            pagination.itemsPerPage < 1 ||
+            pagination.itemsPerPage > 100
+        )
+            throw new Error('Paginación inválida.');
+        const service = useAdmissionCallsService();
+        const calls = await Promise.all(
+            (await service.buscarAdmissionCalls({}, { page: 1, itemsPerPage: 100 })).items.map((item) =>
+                service.obtenerAdmissionCall(item.id)
+            )
+        );
+        const applications = applicantApplicationsStore.list();
+        const term = search?.trim().toLowerCase() ?? '';
+        let items = registros
+            .map((registro) => {
+                const application = applications.find((value) => value.postulanteId === registro.postulanteId);
+                const call = calls.find((value) => value?.id === application?.convocatoriaId);
+                const stage = call?.etapas.find((value) => value.id === application?.etapaActualId);
+                return {
+                    id: registro.postulanteId,
+                    postulante: nombreCompleto(registro.postulante),
+                    convocatoria: call?.nombre ?? 'Sin asignar',
+                    convocatoriaId: call?.id ?? '',
+                    grado: call?.grado || call?.nivel || '',
+                    tutor: nombreCompleto(registro.tutorPrincipal),
+                    documento: registro.postulante.documentoIdentidad,
+                    etapa: stage?.nombre ?? 'Registro inicial',
+                    etapaId: stage?.id ?? '',
+                    fecha: formatearFechaApplicantApplication(application?.fechaRegistro ?? ''),
+                    esRegistroInicial: stage?.id === obtenerPrimerStage(call?.etapas ?? [])?.id
+                };
+            })
+            .filter(
+                (item) =>
+                    (!convocatoriaId || item.convocatoriaId === convocatoriaId) &&
+                    (!stageId || item.etapaId === stageId) &&
+                    (!term || `${item.postulante} ${item.tutor} ${item.documento}`.toLowerCase().includes(term))
+            );
+        if (pagination.sort) {
+            const { key, direction } = pagination.sort;
+            const collator = new Intl.Collator('es-PE', { numeric: true, sensitivity: 'base' });
+            items = [...items].sort(
+                (a, b) => (direction === 'desc' ? -1 : 1) * collator.compare(String(a[key] ?? ''), String(b[key] ?? ''))
+            );
+        }
+        const start = (pagination.page - 1) * pagination.itemsPerPage;
+        return { items: items.slice(start, start + pagination.itemsPerPage), totalItems: items.length };
+    }
 };
