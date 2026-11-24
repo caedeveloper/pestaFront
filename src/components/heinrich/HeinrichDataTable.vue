@@ -87,9 +87,9 @@ function toggleSort(column: HeinrichColumn<T>) { if (!column.sortable) return; i
 .heinrich-data-table :deep(th) {
   white-space: nowrap;
   background: rgb(var(--v-theme-grey100));
-  color: rgb(var(--v-theme-textPrimary));
+  color: #000;
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 .heinrich-data-table :deep(td) {
   font-size: 0.875rem;
