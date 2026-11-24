@@ -1,5 +1,6 @@
 import PostulantesRoutes from '@/features/postulantes/postulantes.routes';
-import ConvocatoriasRoutes from '@/features/admision/convocatorias.routes';
+import ConvocatoriasRoutes from '@/features/convocatorias/convocatorias.routes';
+import SolicitudesPostulantesRoutes from '@/features/solicitudes-postulantes/solicitudes-postulantes.routes';
 
 const MainRoutes = {
     path: '/main',
@@ -16,6 +17,7 @@ const MainRoutes = {
         },
         ...PostulantesRoutes,
         ...ConvocatoriasRoutes,
+        ...SolicitudesPostulantesRoutes,
         // Ejemplos desactivados hasta definir los módulos de admisión.
 //         {
 //             name: 'eCommerce',

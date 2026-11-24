@@ -1,4 +1,4 @@
-import type { AdmissionStage, StageTutorPermissions } from './convocatorias.mock';
+import type { AdmissionStage, StageTutorPermissions } from '@/mocks/convocatorias.mock';
 
 /** Legacy stages keep their established document-upload behaviour. */
 export const legacyStageTutorPermissions: StageTutorPermissions = {

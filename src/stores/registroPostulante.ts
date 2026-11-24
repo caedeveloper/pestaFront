@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { crearPostulanteVacio, crearRegistroPostulanteVacio, crearRegistroPostulantesMock, crearTutorVacio } from '@/features/postulantes/postulantes.mock';
+import { crearPostulanteVacio, crearRegistroPostulanteVacio, crearRegistroPostulantesMock, crearTutorVacio } from '@/mocks/postulantes.mock';
 import { nombreCompleto, porcentaje, seccionesPostulante, seccionesTutor } from '@/features/postulantes/postulantes.helpers';
 import type { EntidadId, PostulanteRegistro, RegistroPostulante, SeccionEstado, TutorEntidadId, TutorRegistro } from '@/features/postulantes/postulantes.types';
 import usePostulantesService from '@/features/postulantes/postulantes.services';

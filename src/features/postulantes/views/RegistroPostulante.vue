@@ -6,9 +6,9 @@ import { useAuthStore } from '@/stores/auth';
 import FormularioPostulante from '../components/FormularioPostulante.vue';
 import FormularioTutor from '../components/FormularioTutor.vue';
 import { registroAsignadoA } from '../postulantes.helpers';
-import { convocatorias } from '@/features/admision/convocatorias.store';
-import { admissionFor } from '@/features/admision/admissionOperational.store';
-import { effectiveStageTutorPermissions } from '@/features/admision/stageTutorPermissions';
+import { convocatorias } from '@/features/convocatorias/convocatorias.services';
+import { admissionFor } from '@/features/solicitudes-postulantes/solicitudes-postulantes.services';
+import { effectiveStageTutorPermissions } from '@/features/convocatorias/convocatorias.helpers';
 
 const route = useRoute();
 const router = useRouter();

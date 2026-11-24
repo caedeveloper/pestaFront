@@ -8,8 +8,8 @@ import HeinrichDataTable, { type HeinrichColumn } from '@/components/heinrich/He
 import HeinrichFilterCard from '@/components/heinrich/filters/HeinrichFilterCard.vue';
 import { defineFilters, type FilterValues } from '@/components/heinrich/filters/filter.types';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
-import { convocatorias, refreshConvocatorias } from '../convocatorias.store';
-import { admissionFor, ensureApplicantAdmissions } from '../admissionOperational.store';
+import { convocatorias, refreshConvocatorias } from '@/features/convocatorias/convocatorias.services';
+import { admissionFor, ensureApplicantAdmissions } from '../solicitudes-postulantes.services';
 import { nombreCompleto } from '@/features/postulantes/postulantes.helpers';
 const router = useRouter(); const store = useRegistroPostulanteStore(); const search = ref(''); const convocatoriaId = ref<string | null>(null); const stageId = ref<string | null>(null);
 onMounted(async () => { refreshConvocatorias(); await store.cargarRegistro(); const current = convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0]; if (current) ensureApplicantAdmissions(store.registros, current.id, current.etapas); });

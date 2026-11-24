@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AdmissionAction, AdmissionContentItem, AdmissionSection } from '../convocatorias.mock';
+import type { AdmissionAction, AdmissionContentItem, AdmissionSection } from '@/mocks/convocatorias.mock';
 defineProps<{ items: AdmissionContentItem[] }>();
 const emit = defineEmits<{ editSection: [section: AdmissionSection]; editAction: [action: AdmissionAction, parentId?: string]; remove: [id: string, parentId?: string]; move: [index: number, delta: number, parentId?: string]; addAction: [parentId?: string] }>();
 const isSection = (item: AdmissionContentItem): item is AdmissionSection => item.tipo === 'section';

@@ -6,8 +6,8 @@ import HeinrichStageRenderer from '@/components/heinrich/HeinrichStageRenderer.v
 import UiModal from '@/components/shared/UiModal.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
-import { convocatorias, refreshConvocatorias } from '../convocatorias.store';
-import { admissionFor, ensureApplicantAdmissions, moveApplicantStage } from '../admissionOperational.store';
+import { convocatorias, refreshConvocatorias } from '@/features/convocatorias/convocatorias.services';
+import { admissionFor, ensureApplicantAdmissions, moveApplicantStage } from '../solicitudes-postulantes.services';
 import { nombreCompleto } from '@/features/postulantes/postulantes.helpers';
 const router = useRouter(); const route = useRoute(); const store = useRegistroPostulanteStore(); const active = ref('stage'); const changing = ref(false); const destination = ref<string | null>(null); const observation = ref(''); const notice = ref(false);
 const postulanteId = computed(() => Number(route.params.postulanteId)); const registro = computed(() => store.registros.find(item => item.postulanteId === postulanteId.value)); const admission = computed(() => admissionFor(postulanteId.value)); const convocatoria = computed(() => convocatorias.value.find(item => item.id === admission.value?.convocatoriaId)); const stage = computed(() => convocatoria.value?.etapas.find(item => item.id === admission.value?.etapaActualId));

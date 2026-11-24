@@ -6,10 +6,10 @@ import HeinrichStageRenderer from '@/components/heinrich/HeinrichStageRenderer.v
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import { convocatorias } from '@/features/admision/convocatorias.store';
-import { admissionFor, ensureApplicantAdmissions, persistApplicantAdmissions } from '@/features/admision/admissionOperational.store';
+import { convocatorias } from '@/features/convocatorias/convocatorias.services';
+import { admissionFor, ensureApplicantAdmissions, persistApplicantAdmissions } from '@/features/solicitudes-postulantes/solicitudes-postulantes.services';
 import { nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
-import { effectiveStageTutorPermissions, stageIsAvailable } from '@/features/admision/stageTutorPermissions';
+import { effectiveStageTutorPermissions, stageIsAvailable } from '@/features/convocatorias/convocatorias.helpers';
 const router = useRouter(); const route = useRoute(); const store = useRegistroPostulanteStore(); const auth = useAuthStore(); const dirty = ref(false); const saved = ref(false);
 const postulanteId = computed(() => Number(route.params.postulanteId));
 const registro = computed(() => store.registros.find(item => item.postulanteId === postulanteId.value));

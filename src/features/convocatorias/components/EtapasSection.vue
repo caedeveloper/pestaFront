@@ -4,8 +4,8 @@ import UiParentCard from '@/components/shared/UiParentCard.vue';
 import UiModal from '@/components/shared/UiModal.vue';
 import HeinrichRichTextEditor from '@/components/heinrich/HeinrichRichTextEditor.vue';
 import StageContentTree from './StageContentTree.vue';
-import type { AdmissionAction, AdmissionActionType, AdmissionContentItem, AdmissionDocument, AdmissionSection, AdmissionStage } from '../convocatorias.mock';
-import { newStageTutorPermissions } from '../stageTutorPermissions';
+import type { AdmissionAction, AdmissionActionType, AdmissionContentItem, AdmissionDocument, AdmissionSection, AdmissionStage } from '@/mocks/convocatorias.mock';
+import { newStageTutorPermissions } from '../convocatorias.helpers';
 
 const props = defineProps<{ convocatoriaId: string; stages: AdmissionStage[] }>();
 const emit = defineEmits<{ 'update:stages': [stages: AdmissionStage[]]; 'editing-change': [editing: boolean] }>();

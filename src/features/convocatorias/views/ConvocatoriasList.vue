@@ -8,8 +8,8 @@ import HeinrichDataTable, { type HeinrichColumn } from '@/components/heinrich/He
 import HeinrichFilterCard from '@/components/heinrich/filters/HeinrichFilterCard.vue';
 import { defineFilters, type FilterValues } from '@/components/heinrich/filters/filter.types';
 import HeinrichStatusChip from '@/components/heinrich/HeinrichStatusChip.vue';
-import { type Convocatoria, type ConvocatoriaEstado } from '../convocatorias.mock';
-import { convocatorias } from '../convocatorias.store';
+import { type Convocatoria, type ConvocatoriaEstado } from '@/mocks/convocatorias.mock';
+import { convocatorias } from '../convocatorias.services';
 
 const submitted = ref({ anio: null as string | null, grado: null as string | null, estado: null as ConvocatoriaEstado | null, nombre: '' });
 const router = useRouter();

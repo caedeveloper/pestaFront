@@ -1,6 +1,6 @@
-import { PAIS_PERU } from './postulantes.catalogos';
-import { referenciaVacia } from './postulantes.helpers';
-import type { PostulanteRegistro, RegistroPostulante, RegistroPostulantesSnapshot, TutorRegistro } from './postulantes.types';
+import { PAIS_PERU } from '@/features/postulantes/postulantes.catalogos';
+import { referenciaVacia } from '@/features/postulantes/postulantes.helpers';
+import type { PostulanteRegistro, RegistroPostulante, RegistroPostulantesSnapshot, TutorRegistro } from '@/features/postulantes/postulantes.types';
 
 export function crearTutorVacio(esTitular: boolean): TutorRegistro {
     return {

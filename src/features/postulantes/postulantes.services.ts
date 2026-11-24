@@ -1,5 +1,5 @@
 import { asegurarReferencias } from './postulantes.helpers';
-import { crearRegistroPostulantesMock } from './postulantes.mock';
+import { crearRegistroPostulantesMock } from '@/mocks/postulantes.mock';
 import type { RegistroPostulante, RegistroPostulantesSnapshot } from './postulantes.types';
 
 const POSTULANTES_STORAGE_KEY = 'heinrich-postulantes-registro-v3';

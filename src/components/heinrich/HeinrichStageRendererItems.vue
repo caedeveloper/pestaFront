@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { AdmissionAction, AdmissionContentItem, AdmissionDocument } from '@/features/admision/convocatorias.mock';
-import type { AdmissionActionResponse, UploadedAdmissionFile } from '@/features/admision/admissionOperational.store';
+import type { AdmissionAction, AdmissionContentItem, AdmissionDocument } from '@/mocks/convocatorias.mock';
+import type { AdmissionActionResponse, UploadedAdmissionFile } from '@/mocks/admissionOperational.store';
 const props = defineProps<{ items: AdmissionContentItem[]; responses: Record<string, AdmissionActionResponse>; mode: 'editable' | 'readonly'; postulanteId: number }>();
 const emit = defineEmits<{ changed: [] }>();
 const isSection = (item: AdmissionContentItem) => item.tipo === 'section';
