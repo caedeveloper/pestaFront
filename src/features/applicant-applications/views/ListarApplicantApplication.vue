@@ -92,15 +92,34 @@ onMounted(() => {
                 row-key="id"
                 ><template #item-id="{ item }"
                     ><v-btn
+                        icon
                         size="small"
-                        variant="tonal"
-                        color="default"
-                        :prepend-icon="EyeIcon"
+                        variant="flat"
+                        class="applicant-detail-action"
+                        aria-label="Ver detalle del postulante"
                         @click="router.push({ name: 'admision-postulante-detalle', params: { postulanteId: item.id } })"
-                        >Ver detalle</v-btn
-                    ></template
+                    >
+                        <EyeIcon size="20" />
+
+                        <v-tooltip activator="parent"> Ver detalle </v-tooltip>
+                    </v-btn></template
                 ></HeinrichDataTable
             ></UiParentCard
         >
     </section>
 </template>
+
+<style scoped>
+.applicant-detail-action {
+    width: 32px;
+    height: 28px;
+    min-width: 32px;
+    border-radius: 6px;
+    background-color: #e5e7eb;
+    color: #293956;
+}
+
+.applicant-detail-action:hover {
+    background-color: #d9dde3;
+}
+</style>
