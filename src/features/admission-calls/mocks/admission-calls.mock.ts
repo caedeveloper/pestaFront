@@ -64,6 +64,10 @@ function resolverAdmissionCallStatus(
     item: AdmissionCall
 ): string {
 
+    if (item.estadoManual && statuses.includes(item.estado)) {
+        return item.estado;
+    }
+
     if (item.finalizada) {
         return 'Finalizada';
     }
@@ -300,11 +304,14 @@ export const admissionCallsMock = {
         item: AdmissionCall
     ): AdmissionCall {
 
+        const estado = resolverAdmissionCallStatus(item);
         const value: AdmissionCall = {
             ...item,
             id: item.id || crypto.randomUUID(),
             nombre: item.nombre.trim(),
-            estado: resolverAdmissionCallStatus(item)
+            estado,
+            publicada: item.estadoManual ? estado !== 'Borrador' : item.publicada,
+            finalizada: item.estadoManual ? estado === 'Finalizada' : item.finalizada
         };
 
         return admissionCallsStore.set(value);

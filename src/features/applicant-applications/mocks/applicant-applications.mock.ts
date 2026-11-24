@@ -56,7 +56,11 @@ export const applicantApplicationsMock = {
         const etapaActual = convocatoria?.etapas.find(item => item.id === application?.etapaActualId);
         return {
             registro, application, convocatoria, etapaActual,
-            destinosDisponibles: convocatoria && etapaActual ? destinos(convocatoria, etapaActual) : []
+            destinosDisponibles: convocatoria
+                ? etapaActual
+                    ? destinos(convocatoria, etapaActual)
+                    : [obtenerPrimerStage(convocatoria.etapas)].filter((stage): stage is AdmissionStage => stage !== undefined)
+                : []
         };
     },
     async guardarApplicantApplication(item: ApplicantApplication): Promise<ApplicantApplication> {
@@ -97,11 +101,12 @@ export const applicantApplicationsMock = {
         if (!call) throw new Error('No se encontró la convocatoria.');
         const origin = call.etapas.find(item => item.id === application.etapaActualId);
         const destination = call.etapas.find(item => item.id === request.destinoId);
-        if (!origin || !destination || !destinos(call, origin).some(item => item.id === destination.id))
+        const available = origin ? destinos(call, origin) : [obtenerPrimerStage(call.etapas)];
+        if (!destination || !available.some(item => item?.id === destination.id))
             throw new Error('El movimiento de etapa no está permitido.');
         application.etapaActualId = destination.id;
         application.historial.push({
-            origenId: origin.id, destinoId: destination.id, fecha: new Date().toISOString(),
+            origenId: origin?.id, destinoId: destination.id, fecha: new Date().toISOString(),
             observacion: request.observacion?.trim() || undefined, responsable: 'Personal de admisión'
         });
         return applicantApplicationsStore.set(application);

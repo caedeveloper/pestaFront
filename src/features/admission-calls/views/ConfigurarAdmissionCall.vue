@@ -62,7 +62,15 @@ let gradeRequestId = 0;
 
 const cycles = ref<CatalogItem[]>([]);
 const levels = ref<CatalogItem[]>([]);
+const statuses = ref<CatalogItem[]>([]);
 const availableGrades = ref<CatalogItem[]>([]);
+
+function cambiarEstado(value: string | null): void {
+    if (!form.value || !value) return;
+
+    form.value.estado = value;
+    form.value.estadoManual = true;
+}
 
 async function cargarGrados(
     nivel: string
@@ -194,10 +202,12 @@ async function cargarAdmissionCall(): Promise<void> {
         const [
             academicYears,
             educationLevels,
+            admissionStatuses,
             admissionCall
         ] = await Promise.all([
             service.obtenerAcademicYears(),
             service.obtenerLevels(),
+            service.obtenerStatuses(),
 
             id
                 ? service.obtenerAdmissionCall(id)
@@ -216,6 +226,7 @@ async function cargarAdmissionCall(): Promise<void> {
 
         cycles.value = academicYears;
         levels.value = educationLevels;
+        statuses.value = admissionStatuses;
 
         form.value = JSON.parse(
             JSON.stringify(admissionCall)
@@ -278,6 +289,8 @@ async function guardarAdmissionCall(
 
         if (publicar) {
             item.publicada = true;
+            item.finalizada = false;
+            item.estadoManual = false;
         }
 
         const result =
@@ -482,6 +495,13 @@ watch(
                         label="Ciclo académico" :error-messages="submitted ? errors?.anio : ''
                             " />
 
+                </v-col>
+            </v-row>
+
+            <v-row v-if="route.params.id">
+                <v-col cols="12" md="5">
+                    <v-select :model-value="form.estado" :items="statuses" item-title="nombre" item-value="codigo"
+                        label="Estado del proceso" @update:model-value="cambiarEstado" />
                 </v-col>
             </v-row>
 

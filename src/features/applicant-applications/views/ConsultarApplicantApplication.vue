@@ -86,7 +86,7 @@ async function cambiarStageApplicantApplication(destinationId: string, observati
                         <div><div class="text-h6">{{ detail.etapaActual?.nombre || 'Sin etapa asignada' }}</div><div class="text-body-2 text-medium-emphasis">{{ detail.etapaActual?.descripcion }}</div></div>
                         <v-btn color="primary" :disabled="!detail.destinosDisponibles.length" @click="changing = true">Cambiar etapa</v-btn>
                     </div>
-                    <v-alert v-if="!detail.destinosDisponibles.length" type="info" variant="tonal" density="compact" class="mb-4">No existen etapas destino configuradas para la etapa actual.</v-alert>
+                    <v-alert v-if="!detail.destinosDisponibles.length" type="info" variant="tonal" density="compact" class="mb-4">{{ detail.etapaActual ? 'No existen etapas destino configuradas para la etapa actual.' : 'No hay una etapa inicial configurada en esta convocatoria.' }}</v-alert>
                     <HeinrichStageRenderer v-if="detail.etapaActual && detail.application" :stage="detail.etapaActual"
                         :postulante-id="postulanteId" :data="detail.application.respuestas" mode="readonly" />
                 </div>

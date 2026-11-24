@@ -22,6 +22,7 @@ export interface AdmissionCall {
     publicada: boolean;
     finalizada: boolean;
     estado: string;
+    estadoManual?: boolean;
     etapas: AdmissionStage[];
 }
 
