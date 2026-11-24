@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { EyeIcon } from 'vue-tabler-icons';
+import { EyeIcon as IconEye } from 'vue-tabler-icons';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import HeinrichDataTable from '@/components/heinrich/heinrich-data-table/HeinrichDataTable.vue';
 import useDataTableFetch from '@/components/heinrich/heinrich-data-table/useDataTableFetch';
@@ -69,17 +69,13 @@ onMounted(() => { void cargarSummary({}); });
             <HeinrichDataTable v-model:query="query" :columns="APPLICANT_APPLICATION_COLUMNS"
                 :defaults="APPLICANT_APPLICATION_TABLE_DEFAULTS" :state="state" row-key="id">
                 <template #item-id="{ item }">
-                    <v-btn icon size="small" variant="flat" class="applicant-detail-action" aria-label="Ver detalle del postulante"
+                    <v-btn size="small" color="default" variant="tonal" aria-label="Ver detalle del postulante"
                         @click="router.push({ name: 'admision-postulante-detalle', params: { postulanteId: item.id } })">
-                        <EyeIcon size="20" /><v-tooltip activator="parent">Ver detalle</v-tooltip>
+                        <IconEye />
+                        <v-tooltip activator="parent">Ver detalle</v-tooltip>
                     </v-btn>
                 </template>
             </HeinrichDataTable>
         </UiParentCard>
     </section>
 </template>
-
-<style scoped>
-.applicant-detail-action { width: 32px; height: 28px; min-width: 32px; border-radius: 6px; background-color: rgb(var(--v-theme-surface-variant)); color: rgb(var(--v-theme-on-surface)); }
-.applicant-detail-action:hover { background-color: rgba(var(--v-theme-primary), .12); }
-</style>
