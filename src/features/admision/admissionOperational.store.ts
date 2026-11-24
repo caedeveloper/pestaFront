@@ -1,20 +1,21 @@
 import { ref } from 'vue';
 import type { RegistroPostulante } from '@/features/postulantes/postulantes.types';
 import type { AdmissionStage } from './convocatorias.mock';
+import { useAdmissionOperationalService } from './admissionOperational.services';
 
 export type UploadedAdmissionFile = { nombre: string; tipo: string; tamano: number; dataUrl?: string; cargadoEn: string };
 export type AdmissionActionResponse = { documentos?: Record<string, UploadedAdmissionFile>; confirmado?: boolean; confirmadoEn?: string; confirmadoPor?: string };
 export type AdmissionHistory = { origenId?: string; destinoId: string; fecha: string; observacion?: string; responsable?: string };
 export type ApplicantAdmission = { postulanteId: number; convocatoriaId: string; etapaActualId: string; fechaRegistro: string; respuestas: Record<string, AdmissionActionResponse>; historial: AdmissionHistory[] };
 
-const storageKey = 'heinrich-admision-operacion-v1';
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-const read = (): ApplicantAdmission[] => {
-    if (typeof window === 'undefined') return [];
-    try { return JSON.parse(window.localStorage.getItem(storageKey) || '[]') as ApplicantAdmission[]; } catch { return []; }
-};
-export const applicantAdmissions = ref<ApplicantAdmission[]>(read());
-const persist = () => { if (typeof window !== 'undefined') window.localStorage.setItem(storageKey, JSON.stringify(applicantAdmissions.value)); };
+const service = useAdmissionOperationalService();
+export const applicantAdmissions = ref<ApplicantAdmission[]>(service.fetchAll());
+const persist = () => service.saveAll(applicantAdmissions.value);
+export function refreshApplicantAdmissions() { applicantAdmissions.value = service.fetchAll(); }
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (event) => { if (service.hasExternalChange(event)) refreshApplicantAdmissions(); });
+}
 
 export function ensureApplicantAdmissions(registros: RegistroPostulante[], convocatoriaId: string, stages: AdmissionStage[]) {
     const firstStage = stages.slice().sort((a, b) => a.orden - b.orden)[0];

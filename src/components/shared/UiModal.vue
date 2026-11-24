@@ -35,7 +35,7 @@ const closeDialog = () => emit('update:show', false);
         :persistent="persistent"
         @update:model-value="closeDialog"
     >
-        <v-card>
+        <v-card class="ui-modal-card">
             <v-card-text class="d-flex align-center" style="overflow-y: visible">
                 <div>
                     <v-card-title v-if="title" class="text-h5 pl-0 text-wrap" :class="[subtitle ? 'pb-0' : '']">
@@ -51,7 +51,7 @@ const closeDialog = () => emit('update:show', false);
             </v-card-text>
             <v-progress-linear v-if="loading" :indeterminate="true" height="3" color="primary" />
             <v-divider />
-            <v-card-text><slot /></v-card-text>
+            <v-card-text class="ui-modal-content" :class="{ 'ui-modal-content--scrollable': scrollable }"><slot /></v-card-text>
             <v-card-actions>
                 <slot v-if="!loading" name="footer-actions-left" />
                 <v-spacer />
@@ -61,3 +61,8 @@ const closeDialog = () => emit('update:show', false);
         </v-card>
     </v-dialog>
 </template>
+<style scoped>
+.ui-modal-card { display: flex; flex-direction: column; max-height: calc(100vh - 48px); }
+.ui-modal-content { min-height: 0; }
+.ui-modal-content--scrollable { overflow-y: auto; }
+</style>

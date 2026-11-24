@@ -111,10 +111,6 @@ function discard() {
 }
 function updateStages(stages: AdmissionStage[]) {
     form.value.etapas = stages;
-    if (existing.value) {
-        saveConvocatoria(form.value);
-        savedSnapshot.value = JSON.stringify(form.value);
-    }
 }
 onBeforeRouteLeave(() => {
     if (isDirty.value && !allowLeave.value) return window.confirm('Hay cambios sin guardar. ¿Desea descartarlos?');

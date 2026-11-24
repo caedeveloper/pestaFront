@@ -85,7 +85,7 @@ function save(close = false) {
     if (index < 0) list.push(value);
     else list.splice(index, 1, value);
     emit('update:stages', normalize(list));
-    message.value = 'La etapa se guardó correctamente.';
+    message.value = 'Etapa actualizada en el borrador. Guarda la convocatoria para aplicar los cambios.';
     if (close) editing.value = null;
 }
 function actionCount(items: AdmissionContentItem[] = []): number {
@@ -245,7 +245,7 @@ async function loadDocumentTemplate(document: AdmissionDocument, event: Event) {
     <template v-if="editing">
         <v-btn variant="text" class="px-0 mb-4" prepend-icon="mdi-arrow-left" @click="editing = null">Volver a etapas</v-btn>
         <UiParentCard :title="editing.nombre || 'Nueva etapa'" icon="mdi-format-list-bulleted-square"
-            ><template #action><v-btn color="primary" @click="save">Guardar etapa</v-btn></template>
+            ><template #action><v-btn color="primary" @click="save(true)">Guardar etapa</v-btn></template>
             <v-row class="mb-1"
                 ><v-col cols="12" md="6"
                     ><v-text-field v-model="editing.nombre" label="Nombre de la etapa *" placeholder="Ej. Registro de postulantes" /></v-col
@@ -431,6 +431,7 @@ async function loadDocumentTemplate(document: AdmissionDocument, event: Event) {
     <UiModal
         :show="Boolean(actionDialog)"
         :title="actionDialog?.action.nombre ? 'Editar bloque' : 'Nuevo bloque'"
+        height="90vh"
         persistent
         hide-footer-close
         @update:show="actionDialog = null"
@@ -470,7 +471,7 @@ async function loadDocumentTemplate(document: AdmissionDocument, event: Event) {
                         hide-details
                         class="mb-2" />
                     <v-row dense class="mb-1"><v-col cols="12" md="5"><v-text-field v-model="document.formatosPermitidos" density="compact" label="Formatos permitidos" placeholder="PDF, JPG, PNG" hide-details /></v-col><v-col cols="12" md="4"><v-text-field v-model.number="document.tamanoMaximo" density="compact" type="number" min="1" label="Tamaño máximo (MB)" hide-details /></v-col><v-col cols="12" md="3" class="d-flex align-center"><v-checkbox v-model="document.permitirReemplazo" density="compact" label="Permitir reemplazo" hide-details /></v-col></v-row>
-                    <div class="d-flex flex-wrap align-center ga-2 mb-2"><v-btn size="small" variant="outlined" prepend-icon="mdi-file-upload-outline" @click="($refs[`template-${document.id}`] as HTMLInputElement)?.click()">{{ document.plantilla ? 'Cambiar plantilla' : 'Subir plantilla' }}</v-btn><span v-if="document.plantilla" class="text-caption text-medium-emphasis">{{ document.plantilla.nombre }}</span><v-btn v-if="document.plantilla" size="x-small" variant="text" color="error" icon="mdi-close" @click="document.plantilla = undefined" /><input :ref="`template-${document.id}`" type="file" class="d-none" @change="loadDocumentTemplate(document, $event)" /></div>
+                    <div class="d-flex flex-wrap align-center ga-2 mb-2"><v-btn size="small" style="margin-top: 4px" variant="outlined" prepend-icon="mdi-file-upload-outline" @click="($refs[`template-${document.id}`] as HTMLInputElement)?.click()">{{ document.plantilla ? 'Cambiar plantilla' : 'Subir plantilla' }}</v-btn><span v-if="document.plantilla" class="text-caption text-medium-emphasis">{{ document.plantilla.nombre }}</span><v-btn v-if="document.plantilla" size="x-small" variant="text" color="error" icon="mdi-close" @click="document.plantilla = undefined" /><input :ref="`template-${document.id}`" type="file" class="d-none" @change="loadDocumentTemplate(document, $event)" /></div>
                     <div class="d-flex align-center">
                         <v-checkbox v-model="document.obligatorio" label="Obligatorio" density="compact" hide-details /><v-spacer /><v-btn
                             size="small"

@@ -1,19 +1,18 @@
 import { ref } from 'vue';
-import { convocatoriasMock, type Convocatoria, type ConvocatoriaEstado } from './convocatorias.mock';
-import { legacyStageTutorPermissions } from './stageTutorPermissions';
+import { type Convocatoria, type ConvocatoriaEstado } from './convocatorias.mock';
+import { useConvocatoriasService } from './convocatorias.services';
 
-const storageKey = 'heinrich-admision-convocatorias';
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-const read = (): Convocatoria[] => {
-    if (typeof window === 'undefined') return clone(convocatoriasMock);
-    try {
-        const saved = window.localStorage.getItem(storageKey);
-        return saved ? (JSON.parse(saved) as Convocatoria[]).map((item) => ({ ...item, etapas: (item.etapas || []).map((stage) => ({ ...stage, workflowIds: stage.workflowIds || [], secciones: stage.secciones || [], connectionIds: stage.connectionIds || [], tutorPermissions: { ...legacyStageTutorPermissions, ...(stage.tutorPermissions || {}) } })) })) : clone(convocatoriasMock);
-    } catch { return clone(convocatoriasMock); }
-};
+const service = useConvocatoriasService();
 
-export const convocatorias = ref<Convocatoria[]>(read());
-const persist = () => window.localStorage.setItem(storageKey, JSON.stringify(convocatorias.value));
+export const convocatorias = ref<Convocatoria[]>(service.fetchAll());
+const persist = () => service.saveAll(convocatorias.value);
+/** Reloads the persisted mock configuration, including changes made in another browser tab. */
+export function refreshConvocatorias() { convocatorias.value = service.fetchAll(); }
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (event) => {
+        if (service.hasExternalChange(event)) refreshConvocatorias();
+    });
+}
 
 export const resolveEstado = (item: Pick<Convocatoria, 'publicada' | 'finalizada' | 'apertura' | 'cierre'>): ConvocatoriaEstado => {
     if (item.finalizada) return 'Finalizada';
