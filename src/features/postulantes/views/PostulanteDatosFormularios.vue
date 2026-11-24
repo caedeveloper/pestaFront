@@ -5,23 +5,24 @@ import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import { admissionCalls } from '@/features/admission-calls/admission-calls.services';
-import { obtenerApplicantApplicationCache, asegurarApplicantApplicationsCache } from '@/features/applicant-applications/applicant-applications.services';
+import useApplicantApplicationsService from '@/features/applicant-applications/applicant-applications.services';
+import type { ApplicantApplicationDetail } from '@/features/applicant-applications/applicant-applications.types';
 import { obtenerEffectiveStageGuardianPermissions } from '@/features/admission-calls/admission-calls.helpers';
 import FormularioPostulante from '../components/FormularioPostulante.vue';
 import FormularioTutor from '../components/FormularioTutor.vue';
 import { nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
 
 const route = useRoute(); const router = useRouter(); const store = useRegistroPostulanteStore(); const auth = useAuthStore(); const saved = ref(false);
+const applicationsService = useApplicantApplicationsService(); const detail = ref<ApplicantApplicationDetail>();
 const postulanteId = computed(() => Number(route.params.postulanteId));
 const registro = computed(() => store.registros.find(item => item.postulanteId === postulanteId.value));
-const admission = computed(() => obtenerApplicantApplicationCache(postulanteId.value));
-const convocatoria = computed(() => admissionCalls.value.find(item => item.id === admission.value?.convocatoriaId));
+const admission = computed(() => detail.value?.application);
+const convocatoria = computed(() => detail.value?.convocatoria);
 const stage = computed(() => convocatoria.value?.etapas.find(item => item.id === admission.value?.etapaActualId));
 const permissions = computed(() => obtenerEffectiveStageGuardianPermissions(stage.value));
 const ownEntity = computed<'tutor-principal' | 'tutor-segundo'>(() => registro.value?.tutorSegundoId === auth.user?.tutorId ? 'tutor-segundo' : 'tutor-principal');
 const nombre = computed(() => registro.value ? nombreCompleto(registro.value.postulante) : 'Postulante');
-onMounted(async () => { await store.cargarRegistro(); const current = registro.value; const call = admissionCalls.value.find(item => item.etapas.length) || admissionCalls.value[0]; if (call) asegurarApplicantApplicationsCache(store.registros, call.id, call.etapas); if (!current || !registroAsignadoA(current, auth.user?.tutorId ?? null, auth.user?.username ?? '')) router.replace({ name: 'postulantes' }); else store.seleccionarPostulante(current.postulanteId); });
+onMounted(async () => { await store.cargarRegistro(); const current = registro.value; if (!current || !registroAsignadoA(current, auth.user?.tutorId ?? null, auth.user?.username ?? '')) { await router.replace({ name: 'postulantes' }); return; } detail.value = await applicationsService.obtenerApplicantApplicationDetail(postulanteId.value); store.seleccionarPostulante(current.postulanteId); });
 async function saveApplicant() { if (permissions.value.canEditApplicant) { await store.guardarRegistro(); saved.value = true; } }
 async function saveTutor() { if (permissions.value.canEditOwnData) { await store.guardarRegistro(); saved.value = true; } }
 </script>

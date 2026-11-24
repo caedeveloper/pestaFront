@@ -1,35 +1,30 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import HeinrichFilterCard from '@/components/heinrich/filters/HeinrichFilterCard.vue';
 import { defineFilters, type FilterValues } from '@/components/heinrich/filters/filter.types';
-import type { AdmissionCall } from '@/features/admission-calls/admission-calls.types';
-const props = defineProps<{ admissionCalls: AdmissionCall[]; loading?: boolean }>();
-const emit = defineEmits<{ buscar: [filters: FilterValues] }>();
-const model = computed(() =>
-    defineFilters({
-        search: { type: 'text', label: 'Buscar por postulante, tutor o documento', defaultValue: '', cols: 12, md: 5 },
-        convocatoriaId: {
-            type: 'select',
-            label: 'Convocatoria',
-            items: props.admissionCalls,
-            itemTitle: 'nombre',
-            itemValue: 'id',
-            cols: 12,
-            md: 4
-        },
-        stageId: {
-            type: 'select',
-            label: 'Etapa',
-            dependsOn: ['convocatoriaId'],
-            itemTitle: 'nombre',
-            itemValue: 'id',
-            cols: 12,
-            md: 3,
-            loadOptions: async (filters) => props.admissionCalls.find((item) => item.id === filters.convocatoriaId)?.etapas ?? []
-        }
-    })
-);
+import useAdmissionCallsService from '@/features/admission-calls/admission-calls.services';
+import type { BuscarApplicantApplicationsRequest } from '../applicant-applications.types';
+const callsService = useAdmissionCallsService();
+const emit = defineEmits<{ buscar: [filters: BuscarApplicantApplicationsRequest] }>();
+const model = defineFilters({
+    search: { type: 'text', label: 'Buscar por postulante, tutor o documento', defaultValue: '', cols: 12, md: 5 },
+    convocatoriaId: {
+        type: 'select', label: 'Convocatoria', itemTitle: 'nombre', itemValue: 'codigo', cols: 12, md: 4,
+        loadOptions: () => callsService.obtenerAdmissionCallCatalog()
+    },
+    stageId: {
+        type: 'select', label: 'Etapa', dependsOn: ['convocatoriaId'], itemTitle: 'nombre', itemValue: 'id', cols: 12, md: 3,
+        loadOptions: async filters => typeof filters.convocatoriaId === 'string'
+            ? callsService.obtenerStages(filters.convocatoriaId) : []
+    }
+});
+function buscar(filters: FilterValues): void {
+    emit('buscar', {
+        search: typeof filters.search === 'string' ? filters.search : undefined,
+        convocatoriaId: typeof filters.convocatoriaId === 'string' ? filters.convocatoriaId : undefined,
+        stageId: typeof filters.stageId === 'string' ? filters.stageId : undefined
+    });
+}
 </script>
 <template>
-    <HeinrichFilterCard :model="model" :loading="loading" @search="emit('buscar', $event)" @reset="emit('buscar', $event)" />
+    <HeinrichFilterCard :model="model" @search="buscar" @reset="buscar" />
 </template>

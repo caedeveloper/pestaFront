@@ -1,163 +1,118 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import HeinrichStageRenderer from '@/components/heinrich/HeinrichStageRenderer.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
-import useAdmissionCallsService from '@/features/admission-calls/admission-calls.services';
-import type { AdmissionCall, AdmissionStage } from '@/features/admission-calls/admission-calls.types';
-import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { nombreCompleto } from '@/features/postulantes/postulantes.helpers';
 import MdlCambiarStageApplicantApplication from '../components/MdlCambiarStageApplicantApplication.vue';
 import useApplicantApplicationsService from '../applicant-applications.services';
-import type { ApplicantApplication } from '../applicant-applications.types';
+import type { ApplicantApplicationDetail } from '../applicant-applications.types';
+
 const router = useRouter();
 const route = useRoute();
-const registroStore = useRegistroPostulanteStore();
 const service = useApplicantApplicationsService();
-const callsService = useAdmissionCallsService();
 const active = ref('stage');
 const changing = ref(false);
 const moving = ref(false);
-const error = ref('');
-const application = ref<ApplicantApplication>();
-const admissionCall = ref<AdmissionCall>();
+const loading = ref(false);
+const loadError = ref('');
+const moveError = ref('');
+const success = ref('');
+const detail = ref<ApplicantApplicationDetail>();
 const postulanteId = computed(() => Number(route.params.postulanteId));
-const registro = computed(() => registroStore.registros.find((item) => item.postulanteId === postulanteId.value));
-const stage = computed(() => admissionCall.value?.etapas.find((item) => item.id === application.value?.etapaActualId));
-const destinations = computed(() =>
-    (admissionCall.value?.etapas ?? []).filter(
-        (item) =>
-            item.id !== stage.value?.id &&
-            (stage.value?.connectionIds.includes(item.id) || item.connectionIds.includes(stage.value?.id ?? ''))
-    )
-);
-const nombre = computed(() => (registro.value ? nombreCompleto(registro.value.postulante) : 'Postulante'));
-async function cargar(): Promise<void> {
-    await registroStore.cargarRegistro();
-    const calls = await callsService.buscarAdmissionCalls({}, { page: 1, itemsPerPage: 100 });
-    const available = (await Promise.all(calls.items.map((item) => callsService.obtenerAdmissionCall(item.id)))).filter(
-        (item): item is AdmissionCall => Boolean(item)
-    );
-    const current = available.find((item) => item.etapas.length) ?? available[0];
-    if (current)
-        await service.asegurarApplicantApplications(
-            registroStore.registros.map((item) => item.postulanteId),
-            current.id,
-            current.etapas
-        );
-    application.value = await service.obtenerApplicantApplication(postulanteId.value);
-    admissionCall.value = available.find((item) => item.id === application.value?.convocatoriaId);
-    if (!registro.value) await router.replace({ name: 'admision-postulantes' });
-}
-async function cambiarStageApplicantApplication(destinationId: string, observation: string): Promise<void> {
-    if (!application.value || !admissionCall.value) return;
-    moving.value = true;
-    error.value = '';
+const nombre = computed(() => detail.value ? nombreCompleto(detail.value.registro.postulante) : 'Postulante');
+let loadRequestId = 0;
+
+async function cargar(id: number): Promise<void> {
+    const requestId = ++loadRequestId;
+    detail.value = undefined;
+    loading.value = true;
+    loadError.value = '';
+    changing.value = false;
+    if (!Number.isInteger(id) || id < 1) { loading.value = false; return; }
     try {
-        application.value = await service.moverApplicantApplicationStage({
-            postulanteId: postulanteId.value,
-            destinoId: destinationId,
-            observacion: observation,
-            stages: admissionCall.value.etapas
-        });
-        changing.value = false;
+        const result = await service.obtenerApplicantApplicationDetail(id);
+        if (requestId === loadRequestId) detail.value = result;
     } catch {
-        error.value = 'No se pudo cambiar la etapa del postulante.';
+        if (requestId === loadRequestId) loadError.value = 'No se pudo cargar el detalle del postulante.';
+    } finally {
+        if (requestId === loadRequestId) loading.value = false;
+    }
+}
+watch(postulanteId, id => { void cargar(id); }, { immediate: true });
+
+async function cambiarStageApplicantApplication(destinationId: string, observation: string): Promise<void> {
+    if (!detail.value?.application || moving.value) return;
+    const id = postulanteId.value;
+    moving.value = true;
+    moveError.value = '';
+    try {
+        await service.moverApplicantApplicationStage({ postulanteId: id, destinoId: destinationId, observacion: observation });
+        const refreshed = await service.obtenerApplicantApplicationDetail(id);
+        if (id === postulanteId.value && refreshed) {
+            detail.value = refreshed;
+            changing.value = false;
+            success.value = 'La etapa del postulante se actualizó correctamente.';
+        }
+    } catch (reason) {
+        if (id === postulanteId.value) moveError.value = reason instanceof Error ? reason.message : 'No se pudo cambiar la etapa del postulante.';
     } finally {
         moving.value = false;
     }
 }
-onMounted(() => {
-    void cargar();
-});
 </script>
 <template>
     <section>
-        <v-btn variant="text" class="px-0 mb-4" prepend-icon="mdi-arrow-left" @click="router.push({ name: 'admision-postulantes' })"
-            >Volver a postulantes</v-btn
-        ><HeinrichHeroBanner :title="nombre" :subtitle="admissionCall?.nombre || 'Postulante'" /><UiParentCard
-            title="Información del postulante"
-            icon="mdi-account-outline"
-            class="mb-6"
-            ><v-row
-                ><v-col cols="12" md="4"
-                    ><b>Convocatoria</b>
-                    <div>{{ admissionCall?.nombre || '—' }}</div></v-col
-                ><v-col cols="12" md="4"
-                    ><b>Nivel / grado</b>
-                    <div>{{ admissionCall?.grado || admissionCall?.nivel || '—' }}</div></v-col
-                ><v-col cols="12" md="4"
-                    ><b>Etapa actual</b>
-                    <div>{{ stage?.nombre || '—' }}</div></v-col
-                ></v-row
-            ></UiParentCard
-        ><UiParentCard
-            ><v-tabs v-model="active"
-                ><v-tab value="stage">Etapa actual</v-tab><v-tab value="registration">Registro</v-tab
-                ><v-tab value="history">Historial</v-tab></v-tabs
-            ><v-divider class="mb-5" />
-            <div v-if="active === 'stage'">
-                <div class="d-flex justify-space-between align-start mb-4">
-                    <div>
-                        <div class="text-h6">{{ stage?.nombre }}</div>
-                        <div class="text-body-2 text-medium-emphasis">{{ stage?.descripcion }}</div>
+        <v-btn variant="text" class="px-0 mb-4" prepend-icon="mdi-arrow-left" @click="router.push({ name: 'admision-postulantes' })">Volver a postulantes</v-btn>
+        <v-alert v-if="loading" type="info" variant="tonal">Cargando detalle del postulante…</v-alert>
+        <v-alert v-else-if="loadError" type="error" variant="tonal">{{ loadError }} <v-btn variant="text" @click="cargar(postulanteId)">Reintentar</v-btn></v-alert>
+        <v-alert v-else-if="!detail" type="warning" variant="tonal">No se encontró el postulante solicitado.</v-alert>
+        <template v-else>
+            <HeinrichHeroBanner :title="nombre" :subtitle="detail.convocatoria?.nombre || 'Postulante'" />
+            <v-alert v-if="success" type="success" variant="tonal" class="mb-4" closable @click:close="success = ''">{{ success }}</v-alert>
+            <UiParentCard title="Información del postulante" icon="mdi-account-outline" class="mb-6">
+                <v-row>
+                    <v-col cols="12" md="4"><b>Convocatoria</b><div>{{ detail.convocatoria?.nombre || '—' }}</div></v-col>
+                    <v-col cols="12" md="4"><b>Nivel / grado</b><div>{{ detail.convocatoria?.grado || detail.convocatoria?.nivel || '—' }}</div></v-col>
+                    <v-col cols="12" md="4"><b>Etapa actual</b><div>{{ detail.etapaActual?.nombre || 'Sin etapa asignada' }}</div></v-col>
+                </v-row>
+            </UiParentCard>
+            <UiParentCard>
+                <v-tabs v-model="active"><v-tab value="stage">Etapa actual</v-tab><v-tab value="registration">Registro</v-tab><v-tab value="history">Historial</v-tab></v-tabs>
+                <v-divider class="mb-5" />
+                <div v-if="active === 'stage'">
+                    <div class="d-flex justify-space-between align-start mb-4">
+                        <div><div class="text-h6">{{ detail.etapaActual?.nombre || 'Sin etapa asignada' }}</div><div class="text-body-2 text-medium-emphasis">{{ detail.etapaActual?.descripcion }}</div></div>
+                        <v-btn color="primary" :disabled="!detail.destinosDisponibles.length" @click="changing = true">Cambiar etapa</v-btn>
                     </div>
-                    <v-btn color="primary" :disabled="!destinations.length" @click="changing = true">Cambiar etapa</v-btn>
+                    <v-alert v-if="!detail.destinosDisponibles.length" type="info" variant="tonal" density="compact" class="mb-4">No existen etapas destino configuradas para la etapa actual.</v-alert>
+                    <HeinrichStageRenderer v-if="detail.etapaActual && detail.application" :stage="detail.etapaActual"
+                        :postulante-id="postulanteId" :data="detail.application.respuestas" mode="readonly" />
                 </div>
-                <v-alert v-if="!destinations.length" type="info" variant="tonal" density="compact" class="mb-4"
-                    >No existen etapas destino configuradas para la etapa actual.</v-alert
-                ><HeinrichStageRenderer
-                    v-if="stage && application"
-                    :stage="stage as any"
-                    :postulante-id="postulanteId"
-                    :data="application.respuestas as any"
-                    mode="readonly"
-                />
-            </div>
-            <div v-else-if="active === 'registration' && registro">
-                <UiParentCard title="Datos del postulante" icon="mdi-account-outline" class="mb-4"
-                    ><v-row
-                        ><v-col cols="12" md="6"
-                            ><b>Nombre</b>
-                            <div>{{ nombre }}</div></v-col
-                        ><v-col cols="12" md="6"
-                            ><b>Documento</b>
-                            <div>{{ registro.postulante.documentoIdentidad || '—' }}</div></v-col
-                        ></v-row
-                    ></UiParentCard
-                ><UiParentCard title="Tutor responsable" icon="mdi-account-star-outline"
-                    ><div>{{ nombreCompleto(registro.tutorPrincipal) }}</div>
-                    <div class="text-body-2 text-medium-emphasis">
-                        {{ registro.tutorPrincipal.correoElectronico || 'Sin correo' }} ·
-                        {{ registro.tutorPrincipal.telefonoCelular || 'Sin teléfono' }}
-                    </div></UiParentCard
-                >
-            </div>
-            <div v-else>
-                <v-timeline side="end" density="compact"
-                    ><v-timeline-item
-                        v-for="entry in application?.historial ?? []"
-                        :key="`${entry.fecha}-${entry.destinoId}`"
-                        dot-color="primary"
-                        ><div class="font-weight-medium">
-                            {{ admissionCall?.etapas.find((item) => item.id === entry.destinoId)?.nombre || 'Etapa' }}
-                        </div>
-                        <div class="text-caption text-medium-emphasis">
-                            {{ new Date(entry.fecha).toLocaleString() }} · {{ entry.responsable || '—' }}
-                        </div>
-                        <div v-if="entry.observacion" class="text-body-2">{{ entry.observacion }}</div></v-timeline-item
-                    ></v-timeline
-                >
-            </div></UiParentCard
-        ><MdlCambiarStageApplicantApplication
-            v-model:show="changing"
-            :applicant-name="nombre"
-            :current-stage-name="stage?.nombre"
-            :destinations="destinations as AdmissionStage[]"
-            :loading="moving"
-            :error="error"
-            @confirmar="cambiarStageApplicantApplication"
-        />
+                <div v-else-if="active === 'registration'">
+                    <UiParentCard title="Datos del postulante" icon="mdi-account-outline" class="mb-4"><v-row>
+                        <v-col cols="12" md="6"><b>Nombre</b><div>{{ nombre }}</div></v-col>
+                        <v-col cols="12" md="6"><b>Documento</b><div>{{ detail.registro.postulante.documentoIdentidad || '—' }}</div></v-col>
+                    </v-row></UiParentCard>
+                    <UiParentCard title="Tutor responsable" icon="mdi-account-star-outline">
+                        <div>{{ nombreCompleto(detail.registro.tutorPrincipal) }}</div>
+                        <div class="text-body-2 text-medium-emphasis">{{ detail.registro.tutorPrincipal.correoElectronico || 'Sin correo' }} · {{ detail.registro.tutorPrincipal.telefonoCelular || 'Sin teléfono' }}</div>
+                    </UiParentCard>
+                </div>
+                <div v-else>
+                    <v-timeline side="end" density="compact">
+                        <v-timeline-item v-for="entry in detail.application?.historial ?? []" :key="`${entry.fecha}-${entry.destinoId}`" dot-color="primary">
+                            <div class="font-weight-medium">{{ detail.convocatoria?.etapas.find(item => item.id === entry.destinoId)?.nombre || 'Etapa' }}</div>
+                            <div class="text-caption text-medium-emphasis">{{ new Date(entry.fecha).toLocaleString() }} · {{ entry.responsable || '—' }}</div>
+                            <div v-if="entry.observacion" class="text-body-2">{{ entry.observacion }}</div>
+                        </v-timeline-item>
+                    </v-timeline>
+                </div>
+            </UiParentCard>
+            <MdlCambiarStageApplicantApplication v-model:show="changing" :applicant-name="nombre"
+                :current-stage-name="detail.etapaActual?.nombre" :destinations="detail.destinosDisponibles"
+                :loading="moving" :error="moveError" @confirmar="cambiarStageApplicantApplication" />
+        </template>
     </section>
 </template>

@@ -7,6 +7,6 @@ export const APPLICANT_APPLICATION_COLUMNS: HeinrichColumn<ApplicantApplicationL
     { title: 'Nivel / grado', key: 'grado' },
     { title: 'Tutor responsable', key: 'tutor' },
     { title: 'Etapa actual', key: 'etapa' },
-    { title: 'Fecha de registro', key: 'fecha', sortType: 'date' },
+    { title: 'Fecha de registro', key: 'fecha', format: 'date', sortType: 'date' },
     { title: 'Acciones', key: 'id', align: 'center', sortable: false, width: '76px' }
 ];

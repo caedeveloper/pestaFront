@@ -49,7 +49,7 @@ function deSnapshotAlmacenado(valor: string | null): RegistroPostulantesSnapshot
 
         if (registro.version === 3 && Array.isArray(registro.registros) && typeof registro.siguienteId === 'number') {
             const registros = registro.registros as Partial<RegistroPostulante>[];
-            if (registros.length && registros.every(esRegistroValido)) {
+            if (registros.every(esRegistroValido)) {
                 registros.forEach((item) => asegurarReferencias(item.postulante));
                 return { version: 3, registros, siguienteId: registro.siguienteId };
             }

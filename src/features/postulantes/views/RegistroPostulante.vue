@@ -1,29 +1,26 @@
-<script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+﻿<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
 import FormularioPostulante from '../components/FormularioPostulante.vue';
 import FormularioTutor from '../components/FormularioTutor.vue';
 import { registroAsignadoA } from '../postulantes.helpers';
-import { admissionCalls } from '@/features/admission-calls/admission-calls.services';
-import { obtenerApplicantApplicationCache } from '@/features/applicant-applications/applicant-applications.services';
+import useApplicantApplicationsService from '@/features/applicant-applications/applicant-applications.services';
+import type { AdmissionStage } from '@/features/admission-calls/admission-calls.types';
 import { obtenerEffectiveStageGuardianPermissions } from '@/features/admission-calls/admission-calls.helpers';
 
 const route = useRoute();
 const router = useRouter();
 const store = useRegistroPostulanteStore();
 const authStore = useAuthStore();
+const applicationsService = useApplicantApplicationsService();
+const stage = ref<AdmissionStage>();
 
 const entidad = computed(() => {
     if (route.name === 'postulante-tutor-responsable-nuevo' || route.name === 'postulante-tutor-registro') return store.entidadDeTutor(Number(route.params.tutorId));
     if (route.name === 'postulante-registro') return 'postulante';
     return null;
-});
-const stage = computed(() => {
-    const admission = obtenerApplicantApplicationCache(Number(route.params.postulanteId));
-    const call = admissionCalls.value.find(item => item.id === admission?.convocatoriaId);
-    return call?.etapas.find(item => item.id === admission?.etapaActualId);
 });
 const registroActual = computed(() => store.registros.find(item => item.postulanteId === Number(route.params.postulanteId)));
 const soloLectura = computed(() => {
@@ -31,7 +28,7 @@ const soloLectura = computed(() => {
     const permissions = obtenerEffectiveStageGuardianPermissions(stage.value);
     if (entidad.value === 'postulante') return !permissions.canEditApplicant;
     const esTutorResponsable = !authStore.user?.tutorId || registroActual.value?.tutorPrincipalId === authStore.user.tutorId;
-    if (route.query.operation === 'add') return !permissions.canAddTutors || !esTutorResponsable;
+    if (route.query.operation === 'add') return !permissions.canAddGuardians || !esTutorResponsable;
     const tutorId = Number(route.params.tutorId);
     const esElPropioTutor = !authStore.user?.tutorId || authStore.user.tutorId === tutorId;
     return !permissions.canEditOwnData || (!esTutorResponsable && !esElPropioTutor);
@@ -83,6 +80,7 @@ async function cargarPostulanteDeRuta() {
     } else {
         store.seleccionarPostulante(Number(route.params.postulanteId));
     }
+    stage.value = (await applicationsService.obtenerApplicantApplicationDetail(store.postulanteId))?.etapaActual;
     if (!esRutaValida()) router.replace({ name: 'postulantes' });
 }
 
@@ -99,3 +97,4 @@ watch(entidad, () => window.scrollTo({ top: 0 }));
     <FormularioPostulante v-if="store.registroCargado && entidad === 'postulante'" :readonly="soloLectura" @volver="volver" />
     <FormularioTutor v-else-if="store.registroCargado && (entidad === 'tutor-principal' || entidad === 'tutor-segundo')" :entidad="entidad" :readonly="soloLectura" @volver="volver" />
 </template>
+

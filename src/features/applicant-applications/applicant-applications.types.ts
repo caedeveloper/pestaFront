@@ -1,5 +1,5 @@
 import type { DataTableQuery, PagedResponse } from '@/components/heinrich/heinrich-data-table/data-table.types';
-import type { AdmissionStage } from '@/features/admission-calls/admission-calls.types';
+import type { AdmissionCall, AdmissionStage } from '@/features/admission-calls/admission-calls.types';
 import type { RegistroPostulante } from '@/features/postulantes/postulantes.types';
 
 export interface UploadedApplicantDocument {
@@ -30,6 +30,13 @@ export interface ApplicantApplication {
     respuestas: Record<string, ApplicantActivityResponse>;
     historial: ApplicantApplicationHistory[];
 }
+export interface ApplicantApplicationDetail {
+    registro: RegistroPostulante;
+    application?: ApplicantApplication;
+    convocatoria?: AdmissionCall;
+    etapaActual?: AdmissionStage;
+    destinosDisponibles: AdmissionStage[];
+}
 export interface BuscarApplicantApplicationsRequest {
     search?: string;
     convocatoriaId?: string | null;
@@ -37,7 +44,6 @@ export interface BuscarApplicantApplicationsRequest {
 }
 export interface BuscarApplicantApplicationsPaginadoRequest extends BuscarApplicantApplicationsRequest {
     pagination: DataTableQuery<ApplicantApplicationListItem>;
-    registros: RegistroPostulante[];
 }
 export interface ApplicantApplicationListItem {
     id: number;
@@ -53,9 +59,13 @@ export interface ApplicantApplicationListItem {
     esRegistroInicial: boolean;
 }
 export type BuscarApplicantApplicationsResponse = PagedResponse<ApplicantApplicationListItem>;
+export interface ApplicantApplicationSummary {
+    totalPostulantes: number;
+    totalRegistroInicial: number;
+    totalOtrasEtapas: number;
+}
 export interface MoverApplicantApplicationStageRequest {
     postulanteId: number;
     destinoId: string;
     observacion?: string;
-    stages: AdmissionStage[];
 }

@@ -15,6 +15,10 @@ import { admissionCallsMock } from './mocks/admission-calls.mock';
 
 export const useAdmissionCallsService = () => ({
 
+    async obtenerAdmissionCallCatalog(): Promise<CatalogItem[]> {
+        return admissionCallsMock.obtenerAdmissionCallCatalog();
+    },
+
     async buscarAdmissionCalls(
         filters: BuscarAdmissionCallsRequest,
         pagination: DataTableQuery<AdmissionCall>

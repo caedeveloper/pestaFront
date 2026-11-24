@@ -1,31 +1,29 @@
 import type { DataTableQuery } from '@/components/heinrich/heinrich-data-table/data-table.types';
-import type { AdmissionStage } from '@/features/admission-calls/admission-calls.types';
-import type { RegistroPostulante } from '@/features/postulantes/postulantes.types';
 import { applicantApplicationsMock } from './mocks/applicant-applications.mock';
 import type {
     ApplicantApplication,
+    ApplicantApplicationDetail,
     ApplicantApplicationListItem,
     BuscarApplicantApplicationsRequest,
     BuscarApplicantApplicationsResponse,
+    ApplicantApplicationSummary,
     MoverApplicantApplicationStageRequest
 } from './applicant-applications.types';
 export const useApplicantApplicationsService = () => ({
     async buscarApplicantApplications(
-        registros: RegistroPostulante[],
         filters: BuscarApplicantApplicationsRequest,
         pagination: DataTableQuery<ApplicantApplicationListItem>
     ): Promise<BuscarApplicantApplicationsResponse> {
-        return applicantApplicationsMock.buscarApplicantApplications({ ...filters, pagination, registros });
+        return applicantApplicationsMock.buscarApplicantApplications({ ...filters, pagination });
     },
     async obtenerApplicantApplication(postulanteId: number): Promise<ApplicantApplication | undefined> {
         return applicantApplicationsMock.obtenerApplicantApplication(postulanteId);
     },
-    async asegurarApplicantApplications(
-        postulanteIds: number[],
-        convocatoriaId: string,
-        stages: AdmissionStage[]
-    ): Promise<ApplicantApplication[]> {
-        return applicantApplicationsMock.asegurarApplicantApplications(postulanteIds, convocatoriaId, stages);
+    async obtenerApplicantApplicationDetail(postulanteId: number): Promise<ApplicantApplicationDetail | undefined> {
+        return applicantApplicationsMock.obtenerApplicantApplicationDetail(postulanteId);
+    },
+    async obtenerApplicantApplicationSummary(filters: BuscarApplicantApplicationsRequest): Promise<ApplicantApplicationSummary> {
+        return applicantApplicationsMock.obtenerApplicantApplicationSummary(filters);
     },
     async guardarApplicantApplication(item: ApplicantApplication): Promise<ApplicantApplication> {
         return applicantApplicationsMock.guardarApplicantApplication(item);

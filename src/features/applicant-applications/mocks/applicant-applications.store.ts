@@ -17,7 +17,10 @@ function write(items: ApplicantApplication[]): void {
 }
 export const applicantApplicationsStore = {
     list: (): ApplicantApplication[] => clone(read()),
-    get: (postulanteId: number): ApplicantApplication | undefined => clone(read().find((item) => item.postulanteId === postulanteId)),
+    get(postulanteId: number): ApplicantApplication | undefined {
+        const item = read().find((current) => current.postulanteId === postulanteId);
+        return item ? clone(item) : undefined;
+    },
     set(item: ApplicantApplication): ApplicantApplication {
         const items = read();
         const index = items.findIndex((current) => current.postulanteId === item.postulanteId);

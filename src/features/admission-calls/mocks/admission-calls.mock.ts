@@ -140,6 +140,10 @@ function convertirCatalogItems(
 
 export const admissionCallsMock = {
 
+    obtenerAdmissionCallCatalog(): CatalogItem[] {
+        return admissionCallsStore.list().map(item => ({ codigo: item.id, nombre: item.nombre }));
+    },
+
     buscarAdmissionCalls(
     request: BuscarAdmissionCallsPaginadoRequest
 ): BuscarAdmissionCallsResponse {

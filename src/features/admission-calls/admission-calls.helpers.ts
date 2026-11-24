@@ -8,6 +8,16 @@ import type {
     AdmissionActivity,
     StageGuardianPermissions
 } from './admission-calls.types';
+import type { AdmissionStage } from './admission-calls.types';
+
+export function validarStageAvailability(stage: AdmissionStage | undefined, now = new Date()): boolean {
+    return !!stage && (!stage.fechaInicio || new Date(stage.fechaInicio) <= now) &&
+        (!stage.fechaCierre || new Date(stage.fechaCierre) >= now);
+}
+
+export function obtenerEffectiveStageGuardianPermissions(stage: AdmissionStage | undefined, now = new Date()): StageGuardianPermissions {
+    return validarStageAvailability(stage, now) && stage ? { ...stage.guardianPermissions } : inicializarStageGuardianPermissions();
+}
 
 export function esAdmissionSection(
     item: AdmissionContentItem

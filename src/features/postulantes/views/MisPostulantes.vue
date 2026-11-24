@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import HeinrichHeroBanner from '@/components/heinrich/HeinrichHeroBanner.vue';
 import UiParentCard from '@/components/shared/UiParentCard.vue';
 import UiAddCard from '@/components/shared/UiAddCard.vue';
 import { useRegistroPostulanteStore } from '@/stores/registroPostulante';
 import { useAuthStore } from '@/stores/auth';
-import { admissionCalls } from '@/features/admission-calls/admission-calls.services';
-import { obtenerApplicantApplicationCache, asegurarApplicantApplicationsCache } from '@/features/applicant-applications/applicant-applications.services';
+import useApplicantApplicationsService from '@/features/applicant-applications/applicant-applications.services';
+import type { ApplicantApplicationDetail } from '@/features/applicant-applications/applicant-applications.types';
 import { iniciales, nombreCompleto, registroAsignadoA } from '../postulantes.helpers';
 const router = useRouter(); const store = useRegistroPostulanteStore(); const authStore = useAuthStore();
-const convocatoria = computed(() => admissionCalls.value.find(item => item.etapas.length) || admissionCalls.value[0]);
-onMounted(async () => { await store.cargarRegistro(); if (convocatoria.value) asegurarApplicantApplicationsCache(store.registros, convocatoria.value.id, convocatoria.value.etapas); });
+const applicationsService = useApplicantApplicationsService();
+const details = ref<Record<number, ApplicantApplicationDetail>>({});
+onMounted(async () => {
+  await store.cargarRegistro();
+  const found = await Promise.all(store.registros.map(item => applicationsService.obtenerApplicantApplicationDetail(item.postulanteId)));
+  details.value = Object.fromEntries(found.filter((item): item is ApplicantApplicationDetail => item !== undefined)
+    .map(item => [item.registro.postulanteId, item]));
+});
 const postulaciones = computed(() => store.registros.filter(registro => registroAsignadoA(registro, authStore.user?.tutorId ?? null, authStore.user?.username ?? '')).map(registro => {
-  const admission = obtenerApplicantApplicationCache(registro.postulanteId); const call = admissionCalls.value.find(item => item.id === admission?.convocatoriaId) || convocatoria.value; const stage = call?.etapas.find(item => item.id === admission?.etapaActualId);
-  return { id: registro.postulanteId, nombre: nombreCompleto(registro.postulante), iniciales: iniciales(registro.postulante), convocatoria: call?.nombre || 'Sin convocatoria', grado: call?.grado || call?.nivel || 'Sin definir', etapa: stage?.nombre || 'Registro inicial' };
+  const detail = details.value[registro.postulanteId]; const call = detail?.convocatoria; const stage = detail?.etapaActual;
+  return { id: registro.postulanteId, nombre: nombreCompleto(registro.postulante), iniciales: iniciales(registro.postulante), convocatoria: call?.nombre || 'Sin convocatoria', grado: call?.grado || call?.nivel || 'Sin definir', etapa: stage?.nombre || 'Sin etapa asignada' };
 }));
 async function agregarPostulante() {
   const tutorId = authStore.user?.tutorId;
