@@ -325,6 +325,14 @@ function obtenerContentStyle(
     column: HeinrichColumn<T>
 ) {
 
+    if (column.wrap) {
+        return {
+            maxWidth: column.maxWidth ?? column.width,
+            whiteSpace: 'normal' as const,
+            overflowWrap: 'anywhere' as const
+        };
+    }
+
     if (!column.truncate) {
         return undefined;
     }

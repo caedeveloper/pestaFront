@@ -36,6 +36,7 @@ export interface ColumnOptions {
     bold?: boolean;
     visible?: boolean;
     truncate?: number;
+    wrap?: boolean;
     tooltip?: boolean;
 
     emptyText?: string;
