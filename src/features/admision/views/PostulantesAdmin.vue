@@ -14,8 +14,20 @@ import { nombreCompleto } from '@/features/postulantes/postulantes.helpers';
 const router = useRouter(); const store = useRegistroPostulanteStore(); const search = ref(''); const convocatoriaId = ref<string | null>(null); const stageId = ref<string | null>(null);
 onMounted(async () => { refreshConvocatorias(); await store.cargarRegistro(); const current = convocatorias.value.find(item => item.etapas.length) || convocatorias.value[0]; if (current) ensureApplicantAdmissions(store.registros, current.id, current.etapas); });
 const filterModel = computed(() => defineFilters({
-    search: { type: 'text', label: 'Buscar por postulante, tutor o documento', defaultValue: '', cols: 12, md: 5 },
-    convocatoriaId: { type: 'select', label: 'Convocatoria', items: convocatorias.value, itemTitle: 'nombre', itemValue: 'id', cols: 12, md: 4 },
+    search: { 
+        type: 'text',
+        label: 'Buscar por postulante, tutor o documento',
+        defaultValue: '',
+        cols: 12,
+        md: 5 },
+    convocatoriaId: { 
+        type: 'select',
+        label: 'Convocatoria',
+        items: convocatorias.value,
+        itemTitle: 'nombre',
+        itemValue: 'id',
+        cols: 12,
+        md: 4 },
     stageId: {
         type: 'select', label: 'Etapa', dependsOn: ['convocatoriaId'], itemTitle: 'nombre', itemValue: 'id', cols: 12, md: 3,
         loadOptions: async filters => convocatorias.value.find(item => item.id === filters.convocatoriaId)?.etapas ?? []
@@ -51,8 +63,9 @@ function buscar(filters: FilterValues) {
         <HeinrichFilterCard :model="filterModel" class="mb-6" @search="buscar" @reset="buscar" />
         <UiParentCard title="Listado de postulantes" icon="mdi-account-group-outline"><v-empty-state v-if="!rows.length"
                 icon="mdi-account-search-outline" title="Sin resultados"
-                text="No hay postulantes que coincidan con los filtros seleccionados." /><HeinrichDataTable v-else
-                :columns="columns" :rows="rows" row-key="id"><template #item-postulante="{ item }">
+                text="No hay postulantes que coincidan con los filtros seleccionados." />
+            <HeinrichDataTable v-else :columns="columns" :rows="rows" row-key="id"><template
+                    #item-postulante="{ item }">
                     <span class="postulante-name">{{ item.postulante }}</span>
                 </template><template #item-tutor="{ item }">
                     <span class="postulante-name">{{ item.tutor }}</span>

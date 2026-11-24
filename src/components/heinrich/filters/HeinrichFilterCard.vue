@@ -19,7 +19,7 @@ const props = withDefaults(
     {
         title: 'Filtros',
         subtitle: '',
-        icon: 'fa fa-filter',
+        icon: 'mdi-filter-outline',
         loading: false,
         botonPrincipal: 'Buscar',
         botonSecundario: 'Limpiar'
@@ -211,8 +211,9 @@ defineExpose({
 <template>
     <v-form ref="frmFiltros" class="mt-5" @submit.prevent="buscar">
         <UiParentCard :title="title" :subtitle="subtitle" :icon="icon" :loading="loading"
+            :hide-content="!mostrarFiltros"
             headerCardItemClass="py-2 px-6" footerCardItemClass="py-2 px-6">
-            <div v-show="mostrarFiltros">
+            <div v-if="mostrarFiltros">
                 <v-row>
                     <v-col v-for="item in renderedFields" :key="item.key" :cols="item.field.cols ?? 12"
                         :sm="item.field.sm ?? 6" :md="item.field.md ?? 4" :lg="item.field.lg ?? 3">
